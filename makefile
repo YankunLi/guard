@@ -2,7 +2,7 @@ EXENAME = guard
 CC = gcc
 LIBS = -lrt
 CFLAGS = -o2
-objects = guard.o utils.o module.o ceph.o in_ceph.o
+objects = guard.o utils.o module.o ceph.o in_ceph.o input.o
 
 $(EXENAME): $(objects)
 	$(CC) -o $@ $^ $(LIBS)

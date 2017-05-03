@@ -9,6 +9,7 @@
 #include "config.h"
 #include "guard.h"
 #include "utils.h"
+#include "module.h"
 
 int start_time;
 
@@ -25,6 +26,10 @@ int main(int argc, char *argv[])
 
     sleep_time = 2;
     read_interval = 1.0f;
+
+    module_init();
+
+    sleep(10);
 
     if ((sleep_time / 1000000.0f) > read_interval)
         sleep_time = (unsigned long) (read_interval * 1000000.0f);

@@ -26,12 +26,13 @@ static void ceph_parse_opt(const char * type, const char * value)
 
 static int ceph_do_init(void)
 {
+    DBG("init ceph module");
     return 0;
 }
 
 static void ceph_read(void)
 {
-    printf("I am ceph module\n");
+    DBG("I am ceph module");
 }
 
 static struct guard_module ceph_ops = {
@@ -44,6 +45,8 @@ static struct guard_module ceph_ops = {
 
 static void __attribute__ ((constructor)) ceph_init(void)
 {
+    DBG("register input module %s", ceph_ops.m_name);
+
     input_register(&ceph_ops);
 }
 

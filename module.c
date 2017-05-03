@@ -38,6 +38,22 @@ void module_foreach_run_enabled(struct guard_subsys *ss)
             m->m_do();
 }
 
+static void module_foreach(struct guard_subsys *ss, void (*cb)(struct guard_module *m))
+{
+    struct guard_module *m;
+
+    list_for_each_entry(m, &ss->s_mod_list, m_list)
+        cb(m);
+}
+
+static void __module_init(struct guard_module *m)
+{
+    DBG("callback __module_init for %s", m->m_name);
+
+    if(m->m_init)
+        m->m_init();
+}
+
 void module_init()
 {
     struct guard_subsys *ss;
@@ -49,6 +65,6 @@ void module_init()
         if (ss->s_activate_default)
             ss->s_activate_default();
 
- //       module_foreach(ss, __module_init);
+        module_foreach(ss, __module_init);
     }
 }

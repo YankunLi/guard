@@ -19,12 +19,12 @@ void input_register(struct guard_module *m)
 
 void activate_default(void)
 {
-    printf("activate input modules\n");
+    DBG("activate input subsystem");
 }
 
 void input_read(void)
 {
-    moudle_foreach_run_enabled(&input_subsys);
+    module_foreach_run_enabled(&input_subsys);
 }
 
 static struct guard_subsys input_subsys = {
@@ -35,5 +35,6 @@ static struct guard_subsys input_subsys = {
 
 static void __attribute__ ((constructor)) __input_init(void)
 {
+    DBG("register input subsystem %s", input_subsys.s_name);
     module_register_subsys(&input_subsys);
 }
