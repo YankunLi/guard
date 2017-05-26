@@ -62,9 +62,35 @@ static int ceph_do_init(void)
     return 0;
 }
 
+static int __show_pools()
+{
+    int buf_sz = rados_pool_list(cluster, NULL, 0);
+    char buf[buf_sz];
+    int ret = rados_pool_list(cluster, buf, buf_sz);
+    if (ret != buf_sz)
+    {
+        return -1;
+    }
+
+    //show pools
+    printf("pools:\n");
+    int pools_count = 0;
+    const char *b = buf;
+    while (1){
+        if ('\0' == b[0])
+            break;
+        pools_count++;
+        printf("'%s'\t", b);
+        b += strlen(b) + 1;
+    }
+}
+
+static int rados
+
 static void ceph_read(void)
 {
-    DBG("I am ceph module");
+    __show_pools();
+//    DBG("I am ceph module");
 }
 
 static struct guard_module ceph_ops = {

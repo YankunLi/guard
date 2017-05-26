@@ -59,6 +59,7 @@ int main(int argc, char *argv[])
                 //process
                 system("clear");
                 printf("%s\n", "hello world");
+                input_read();
                 fflush(stdout);
             }
             st = sleep_time;
