@@ -19,7 +19,7 @@ struct rados_pool_stat {
     uint64_t num_object_clones;
     uint64_t num_object_copies;
 
-    uint64_t num_rb;
+    uint64_t num_rd;
     uint64_t num_rd_kb;
     uint64_t num_wr;
     uint64_t num_wr_kb;
@@ -47,5 +47,7 @@ struct rados_cluster_pool {
 
 extern int list_pools();
 extern void init_pool_ioctx();
+extern int update_pool_stat();
+extern void read_pools_stat();
 
 #endif

@@ -69,3 +69,33 @@ void init_pools_ioctx()
     }
 }
 
+int update_pool_stat(struct rados_pool* pool)
+{
+    int ret = 0;
+    struct rados_pool_stat_t st;
+    ret = rados_ioctx_pool_stat(pool->p_ioctx, &st);
+    if (ret < 0)
+    {
+        DBG("get pool %s status failure", pool->p_name);
+    }
+    DBG("update pool %s status", pool->p_name);
+    DBG("pool %s used read kb : %d", pool->p_name, pool->pool_stat.num_wr_kb);
+
+    pool->pool_stat.num_used_kb = st.num_kb;
+    pool->pool_stat.num_objects = st.num_objects;
+    pool->pool_stat.num_object_clones = st.num_object_clones;
+    pool->pool_stat.num_object_copies = st.num_object_copies;
+    pool->pool_stat.num_rd = st.num_rd;
+    pool->pool_stat.num_rd_kb = st.num_rd_kb;
+    pool->pool_stat.num_wr = st.num_wr;
+    pool->pool_stat.num_wr_kb =st.num_wr_kb;
+
+    return ret;
+}
+
+void read_pools_stat()
+{
+    struct rados_pool *p;
+    list_for_each_entry(p, &cluster_pool.c_pools_list, p_list)
+        update_pool_stat(p);
+}

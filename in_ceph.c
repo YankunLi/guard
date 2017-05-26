@@ -59,12 +59,15 @@ static int ceph_do_init(void)
     } else {
         DBG("Connected to the cluster.");
     }
+    list_pools();
+    init_pools_ioctx();
+
     return 0;
 }
 
 static void ceph_read(void)
 {
-    list_pools();
+    read_pools_stat();
 //    DBG("I am ceph module");
 }
 
