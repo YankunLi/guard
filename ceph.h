@@ -27,6 +27,7 @@ struct rados_pool_stat {
 
 struct rados_pool {
     char * p_name;
+    rados_ioctx_t p_ioctx;
 
     struct rados_pool_stat pool_stat;
 
@@ -45,5 +46,6 @@ struct rados_cluster_pool {
 };
 
 extern int list_pools();
+extern void init_pool_ioctx();
 
 #endif

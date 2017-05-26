@@ -7,6 +7,7 @@
 #include "list.h"
 #include "ceph.h"
 #include "config.h"
+#include "guard.h"
 
 extern rados_t cluster;
 
@@ -53,3 +54,18 @@ int list_pools()
 
     return 0;
 }
+
+void init_pools_ioctx()
+{
+    int ret = 0;
+    struct rados_pool *p;
+    list_for_each_entry(p, &cluster_pool.c_pools_list, p_list)
+    {
+       ret = rados_ioctx_create(cluster, p->p_name, &p->p_ioctx);
+       if (ret < 0)
+       {
+           DBG("create pool io context fail %s", p->p_name);
+       }
+    }
+}
+
