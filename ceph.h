@@ -44,4 +44,6 @@ struct rados_cluster_pool {
     struct list_head c_list;
 };
 
+extern int list_pools();
+
 #endif
