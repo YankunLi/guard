@@ -13,11 +13,11 @@ struct list_head
     struct list_head * next;
 };
 
-#define offsetof(type, member) ((size_t)&(((type*)0)->member))
+#define offsetoff(type, member) ((size_t)&(((type*)0)->member))
 
 #define container_of(ptr, type, member) ({              \
     const typeof(((type *)0)->member) * __mptr = (ptr); \
-    (type *) ( (char*) __mptr - offsetof(type, member) ); })
+    (type *) ( (char*) __mptr - offsetoff(type, member) ); })
 //(type *) ((char *) __mptr - (size_t) &(((type *)0)->member));})
 
 #define list_entry(ptr, type, member) \

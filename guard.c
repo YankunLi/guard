@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
 
     module_init();
 
-    sleep(10);
+    sleep(5);
 
     if ((sleep_time / 1000000.0f) > read_interval)
         sleep_time = (unsigned long) (read_interval * 1000000.0f);

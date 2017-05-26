@@ -28,7 +28,7 @@ input.o: input.c
 	$(CC) -c $<
 
 clean:
-	rm guard $(objects)
+	rm guard $(objects) tags
 #guard: guard.o
 #	gcc -o guard guard.o
 #

@@ -22,6 +22,7 @@
 #include <float.h>
 #include <confuse.h>
 #include <string.h>
+#include <malloc.h>
 
 #include <time.h>
 #include <sys/time.h>
