@@ -49,5 +49,6 @@ extern int list_pools();
 extern void init_pool_ioctx();
 extern int update_pool_stat();
 extern void read_pools_stat();
+extern int send_mon_command();
 
 #endif

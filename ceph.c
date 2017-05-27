@@ -99,3 +99,35 @@ void read_pools_stat()
     list_for_each_entry(p, &cluster_pool.c_pools_list, p_list)
         update_pool_stat(p);
 }
+
+int send_mon_command()
+{
+    int ret = 0;
+    char *buf, *st;
+    size_t buf_len, st_len;
+    char *cmd[2];
+
+    cmd[1] = NULL;
+    cmd[0] = (char *)"{\"prefix\":\"get_command_descriptions\"}";
+    ret = rados_mon_command(cluster, (const char **)cmd, 1, "", 0, &buf, &buf_len, &st, &st_len);
+    if (ret < 0)
+    {
+        DBG("get command descriptions error");
+    }
+    printf("mon command deacriptions : %s \n", buf);
+
+    printf("mon command stat : %s \n", st);
+    rados_buffer_free(buf);
+    rados_buffer_free(st);
+}
+
+//int command_osd_tree()
+//{
+//    int ret = 0;
+//    char *buf, *st;
+//    size_t buf_len, st_len;
+//    char *cmd[2];
+//
+//    
+//
+//}

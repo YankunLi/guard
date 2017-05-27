@@ -68,6 +68,7 @@ static int ceph_do_init(void)
 static void ceph_read(void)
 {
     read_pools_stat();
+    send_mon_command();
 //    DBG("I am ceph module");
 }
 
