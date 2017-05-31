@@ -13,6 +13,25 @@
 //typedef unsigned __int64 uint64_t;
 //typedef unsigned __int32 uint32_t;
 
+#define CEPH_STATUS        100
+
+#define CEPH_OSD_TREE      101
+
+#define CEPH_OSD_DF        102
+
+struct ceph_command {
+    char * c_name;
+    int c_type;
+    char * c_command[2];
+    struct list_head c_list;
+};
+
+struct command_result_t {
+    int c_type;
+    char * c_json;
+    char * c_object;
+};
+
 struct rados_pool_stat {
     uint64_t num_used_kb;
     uint64_t num_objects;
@@ -34,7 +53,7 @@ struct rados_pool {
     struct list_head p_list;
 };
 
-struct rados_cluster_pool {
+struct rados_cluster_pool_t {
     char *c_name;
 
     uint16_t c_num_pools;
@@ -43,6 +62,16 @@ struct rados_cluster_pool {
     int c_has_initialized;
 
     struct list_head c_list;
+};
+
+struct ceph_commands_t {
+    char * c_name;
+
+    uint16_t c_count;
+    struct list_head c_commands_list;
+
+    struct list_head c_list;
+
 };
 
 extern int list_pools();

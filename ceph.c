@@ -11,7 +11,14 @@
 
 extern rados_t cluster;
 
-struct rados_cluster_pool cluster_pool =
+static struct ceph_commands_t ceph_commands =
+{
+    .c_name = "ceph",
+    .c_count = 0,
+    .c_commands_list = LIST_SELF(ceph_commands.c_commands_list),
+};
+
+struct rados_cluster_pool_t cluster_pool =
 {
     .c_name = "ceph",
     .c_num_pools = 0,
@@ -146,4 +153,61 @@ int command_osd_tree()
     rados_buffer_free(st);
 
     return ret;
+}
+
+static void execute_commands()
+{}
+
+static void parse_json()
+{}
+
+static void update_elements()
+{}
+
+static void free_json_space()
+{}
+
+static struct  ceph_command ceph_status =
+{
+    .c_name = "ceph status",
+    .c_type = CEPH_STATUS,
+    .c_command = {"{\"prefix\": \"status\"}", NULL},
+};
+
+static struct ceph_command ceph_osd_df =
+{
+    .c_name = "ceph osd df",
+    .c_type = CEPH_OSD_DF,
+    .c_command = {"{\"prefix\":\"osd df\", \"format\": \"json\"}", NULL},
+};
+
+static int add_command(struct ceph_command * cmd)
+{
+    if (!cmd)
+        return -EBUSY;
+
+    //DBG("add command %s into ceph_cmds %s", cmd.c_name, ceph_commands.c_name);
+    list_add_tail(&cmd->c_list, &ceph_commands.c_commands_list);
+    ceph_commands.c_count++;
+}
+
+static int commands_register()
+{
+ //   DBG("add command %s into ceph_cmds %s", cmd.c_name, ceph_cmds.c_name);
+    add_command(&ceph_status);
+    add_command(&ceph_osd_df);
+
+    return 0;
+}
+
+static void __attribute__ ((constructor)) __init_ceph_commands(void)
+{
+    DBG("init commands, add command to %s", ceph_commands.c_name);
+    int ret = 0;
+    ret = commands_register();
+    if (ret < 0)
+    {
+        DBG("don't found ceph commands %s", ceph_commands.c_name);
+        assert("fail" == 0);
+    }
 }
