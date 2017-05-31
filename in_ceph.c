@@ -69,6 +69,7 @@ static void ceph_read(void)
 {
     read_pools_stat();
     send_mon_command();
+    //command_osd_tree();
 //    DBG("I am ceph module");
 }
 

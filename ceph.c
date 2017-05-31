@@ -108,7 +108,9 @@ int send_mon_command()
     char *cmd[2];
 
     cmd[1] = NULL;
-    cmd[0] = (char *)"{\"prefix\":\"get_command_descriptions\"}";
+    //cmd[0] = (char *)"{\"prefix\":\"get_command_descriptions\"}";
+    //cmd[0] = (char *)"{\"prefix\":\"status\", \"format\": \"html-pretty\"}";
+    cmd[0] = (char *)"{\"prefix\":\"osd df\", \"format\": \"json\"}";
     ret = rados_mon_command(cluster, (const char **)cmd, 1, "", 0, &buf, &buf_len, &st, &st_len);
     if (ret < 0)
     {
@@ -121,13 +123,27 @@ int send_mon_command()
     rados_buffer_free(st);
 }
 
-//int command_osd_tree()
-//{
-//    int ret = 0;
-//    char *buf, *st;
-//    size_t buf_len, st_len;
-//    char *cmd[2];
-//
-//    
-//
-//}
+int command_osd_tree()
+{
+    int ret = 0;
+    char *buf, *st;
+    size_t buf_len, st_len;
+    char *cmd[2];
+
+    cmd[1] = NULL;
+    cmd[0] = "{\"prefix\": \"\"}";
+
+    ret = rados_mon_command_target(cluster, "", (const char **)cmd, 1, "", 0, &buf, &buf_len, &st, &st_len);
+    if (ret > 0)
+    {
+        DBG("get command descriptions error");
+        return ret;
+    }
+
+    printf("command osd tree result: %s \n", buf);
+    printf("command osd tree result status: %s \n", st);
+    rados_buffer_free(buf);
+    rados_buffer_free(st);
+
+    return ret;
+}
