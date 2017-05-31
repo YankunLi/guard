@@ -277,7 +277,6 @@ static struct ceph_command_t ceph_osd_tree =
 
 static int add_command(struct ceph_command_t * cmd)
 {
-    A
     if (!cmd)
         return -EBUSY;
 
