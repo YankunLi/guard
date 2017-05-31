@@ -155,8 +155,92 @@ int command_osd_tree()
     return ret;
 }
 
-static void execute_commands()
+static void check_command()
 {}
+
+static void prepare_commands()
+{
+    DBG("prepare commands for reading cluster info");
+    struct ceph_command_t * cmd;
+    void * result;
+    list_for_each_entry(cmd, &ceph_commands.c_commands_list, c_list)
+    {
+        result = (void *) malloc(sizeof(struct command_result_t));
+        if (!result)
+        {
+            DBG("failure of malloc");
+            assert("malloc fail" == 0);
+        }
+        cmd->c_result_ptr = (struct command_result_t *) result;
+    }
+}
+
+static int read_ceph_status()
+{}
+
+static int read_ceph_osd_df()
+{}
+
+static int read_ceph_osd_tree()
+{
+}
+
+static int execute_command(struct ceph_command_t * cmd)
+{
+    int ret = 0;
+    char **buf = &cmd->c_result_ptr->c_json;
+    char **st = &cmd->c_result_ptr->c_status;
+    size_t * buf_len = &cmd->c_result_ptr->c_json_len;
+    size_t * st_len = &cmd->c_result_ptr->c_status_len;
+
+    ret = rados_mon_command(cluster, (const char **)cmd->c_command, 1, "", 0, buf, buf_len, st, st_len);
+    if (ret < 0)
+    {
+        DBG("executing command %s fail", cmd->c_name);
+        return ret;
+    }
+
+    return 0;
+}
+
+static void submit_commands()
+{
+    struct ceph_command_t * cmd;
+    list_for_each_entry(cmd, &ceph_commands.c_commands_list, c_list)
+    {
+//        switch (cmd->c_type)
+//        {
+//            case CEPH_STATUS:
+//                read_ceph_status();
+//                break;
+//            case CEPH_OSD_DF:
+//                read_ceph_osd_df();
+//                break;
+//            case CEPH_OSD_TREE:
+//                read_ceph_osd_tree();
+//                break;
+//            default:
+//                DBG("this command is invalid");
+//        }
+        execute_command(cmd);
+    }
+}
+
+int read_ceph_info()
+{
+    if (ceph_commands.c_count <= 0)
+    {
+        DBG("don't found any command");
+        return -1;
+    }
+
+    check_command();
+    submit_commands();
+
+//
+//    parse_cmd_result();
+//
+}
 
 static void parse_json()
 {}
@@ -167,28 +251,41 @@ static void update_elements()
 static void free_json_space()
 {}
 
-static struct  ceph_command ceph_status =
+static struct  ceph_command_t ceph_status =
 {
     .c_name = "ceph status",
     .c_type = CEPH_STATUS,
-    .c_command = {"{\"prefix\": \"status\"}", NULL},
+    .c_command = {"{\"prefix\": \"status\", \"format\": \"json\"}", NULL},
+    .c_result_ptr = NULL,
 };
 
-static struct ceph_command ceph_osd_df =
+static struct ceph_command_t ceph_osd_df =
 {
     .c_name = "ceph osd df",
     .c_type = CEPH_OSD_DF,
     .c_command = {"{\"prefix\":\"osd df\", \"format\": \"json\"}", NULL},
+    .c_result_ptr = NULL,
 };
 
-static int add_command(struct ceph_command * cmd)
+static struct ceph_command_t ceph_osd_tree =
 {
+    .c_name = "ceph osd tree",
+    .c_type = CEPH_OSD_TREE,
+    .c_command = {"{\"prefix\":\"status\", \"format\": \"json\"}"},
+    .c_result_ptr = NULL,
+};
+
+static int add_command(struct ceph_command_t * cmd)
+{
+    A
     if (!cmd)
         return -EBUSY;
 
     //DBG("add command %s into ceph_cmds %s", cmd.c_name, ceph_commands.c_name);
     list_add_tail(&cmd->c_list, &ceph_commands.c_commands_list);
     ceph_commands.c_count++;
+
+    return 0;
 }
 
 static int commands_register()
@@ -196,6 +293,7 @@ static int commands_register()
  //   DBG("add command %s into ceph_cmds %s", cmd.c_name, ceph_cmds.c_name);
     add_command(&ceph_status);
     add_command(&ceph_osd_df);
+    add_command(&ceph_osd_tree);
 
     return 0;
 }

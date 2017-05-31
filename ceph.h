@@ -19,17 +19,23 @@
 
 #define CEPH_OSD_DF        102
 
-struct ceph_command {
+struct command_result_t {
+    int c_type;
+    char * c_json;
+    char * c_status;
+    size_t c_json_len, c_status_len;
+
+    char * c_object;
+    struct list_head c_list;
+};
+
+struct ceph_command_t {
     char * c_name;
     int c_type;
     char * c_command[2];
     struct list_head c_list;
-};
 
-struct command_result_t {
-    int c_type;
-    char * c_json;
-    char * c_object;
+    struct command_result_t * c_result_ptr;
 };
 
 struct rados_pool_stat {
@@ -74,10 +80,20 @@ struct ceph_commands_t {
 
 };
 
+struct commands_result_t {
+    char * c_name;
+
+    uint16_t c_count;
+    struct list_head c_cmd_result_list;
+
+    struct list_head c_list;
+};
+
 extern int list_pools();
 extern void init_pool_ioctx();
 extern int update_pool_stat();
 extern void read_pools_stat();
 extern int send_mon_command();
+extern void read_cluster_info();
 
 #endif
