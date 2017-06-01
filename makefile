@@ -1,5 +1,5 @@
 EXENAME = guard
-CC = gcc
+#CC = gcc
 LIBS = -lrt -lrados
 CFLAGS = -o2
 objects = guard.o utils.o module.o ceph.o in_ceph.o input.o cJSON.o
