@@ -39,6 +39,16 @@ struct ceph_command_t {
     struct command_result_t * c_result_ptr;
 };
 
+struct ceph_commands_t {
+    char * c_name;
+
+    uint16_t c_count;
+    struct list_head c_commands_list;
+
+    struct list_head c_list;
+
+};
+
 struct rados_pool_stat {
     uint64_t num_used_kb;
     uint64_t num_objects;
@@ -71,14 +81,47 @@ struct rados_cluster_pool_t {
     struct list_head c_list;
 };
 
-struct ceph_commands_t {
-    char * c_name;
+struct osd_perf_t {
+    int commit_latency_ms;
+    int apply_latency_ms;
+};
 
-    uint16_t c_count;
-    struct list_head c_commands_list;
+struct osd_server_t {
+    char * o_arch;
+    char * o_ceph_version;
+    char * o_filestore_backend;
+    char * o_front_addr;
+    char * o_hb_back_addr;
+    char * o_hb_front_addr;
+    char * o_hostname;
+    char * o_osd_data;
+    char * o_osd_journal;
+    char * o_osd_objectstore;
 
-    struct list_head c_list;
+    struct list_head o_list;
+};
 
+struct nodes_t {
+    char * n_name;
+    char * n_id;
+    int n_reweight;
+    int n_raw_kb;
+    int n_raw_kb_used;
+    int n_raw_kb_avail;
+    double n_utilization;
+    double n_var;
+
+    char * n_osd_data;
+
+    struct osd_perf_t n_perf_stats;
+
+    struct osd_server_t * n_osd_server;
+
+    struct list_head n_list;
+};
+
+struct rados_osds_t {
+    struct list_head rados_osds_list;
 };
 
 struct commands_result_t {

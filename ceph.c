@@ -266,6 +266,9 @@ static void parse_json_format()
     }
 }
 
+static int transform()
+{}
+
 int read_ceph_info()
 {
     if (ceph_commands.c_count <= 0)
