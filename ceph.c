@@ -18,6 +18,13 @@ static struct ceph_commands_t ceph_commands =
     .c_commands_list = LIST_SELF(ceph_commands.c_commands_list),
 };
 
+static struct commands_result_t cmds_result =
+{
+    .c_name = "ceph",
+    .c_count = 0,
+    .c_cmd_result_list = LIST_SELF(cmds_result.c_cmd_result_list),
+};
+
 struct rados_cluster_pool_t cluster_pool =
 {
     .c_name = "ceph",
@@ -172,6 +179,9 @@ static void prepare_commands()
             assert("malloc fail" == 0);
         }
         cmd->c_result_ptr = (struct command_result_t *) result;
+
+        list_add_tail(result, &cmds_result.c_cmd_result_list);
+        cmds_result.c_count++;
     }
 }
 
@@ -226,6 +236,17 @@ static void submit_commands()
     }
 }
 
+static void parse_json_format()
+{
+    struct command_result_t * cmd;
+    list_for_each_entry(cmd, &cmds_result.c_cmd_result_list, c_list)
+    {
+        if (!cmd->c_json)
+            return;
+        cmd->c_object = cJSON_Parse(cmd->c_json);
+    }
+}
+
 int read_ceph_info()
 {
     if (ceph_commands.c_count <= 0)
@@ -236,6 +257,7 @@ int read_ceph_info()
 
     check_command();
     submit_commands();
+    parse_json_format();
 
 //
 //    parse_cmd_result();

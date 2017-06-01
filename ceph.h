@@ -9,6 +9,7 @@
 
 #include "config.h"
 #include "list.h"
+#include "cJSON.h"
 
 //typedef unsigned __int64 uint64_t;
 //typedef unsigned __int32 uint32_t;
@@ -25,7 +26,7 @@ struct command_result_t {
     char * c_status;
     size_t c_json_len, c_status_len;
 
-    char * c_object;
+    cJSON * c_object;
     struct list_head c_list;
 };
 
