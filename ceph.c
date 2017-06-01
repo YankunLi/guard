@@ -236,14 +236,33 @@ static void submit_commands()
     }
 }
 
+static void buffer_free(void * buf)
+{
+    if (buf)
+        rados_buffer_free(buf);
+}
+
+static void guard_buf_free()
+{
+    struct command_result_t * cmd_ret;
+    list_for_each_entry(cmd_ret, &cmds_result.c_cmd_result_list, c_list)
+    {
+        if (cmd_ret->c_json)
+            buffer_free((void *) cmd_ret->c_json);
+
+        if (cmd_ret->c_status)
+            buffer_free((void *) cmd_ret->c_status);
+    }
+}
+
 static void parse_json_format()
 {
-    struct command_result_t * cmd;
-    list_for_each_entry(cmd, &cmds_result.c_cmd_result_list, c_list)
+    struct command_result_t * cmd_ret;
+    list_for_each_entry(cmd_ret, &cmds_result.c_cmd_result_list, c_list)
     {
-        if (!cmd->c_json)
+        if (!cmd_ret->c_json)
             return;
-        cmd->c_object = cJSON_Parse(cmd->c_json);
+        cmd_ret->c_object = cJSON_Parse(cmd_ret->c_json);
     }
 }
 
