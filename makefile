@@ -31,7 +31,7 @@ cJSON.o: cJSON.c
 	$(CC) -c $<
 
 clean:
-	rm guard $(objects) tags
+	$(RM) guard $(objects) tags
 #guard: guard.o
 #	gcc -o guard guard.o
 #
