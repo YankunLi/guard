@@ -315,9 +315,25 @@ static struct ceph_command_t ceph_osd_tree =
 {
     .c_name = "ceph osd tree",
     .c_type = CEPH_OSD_TREE,
-    .c_command = {"{\"prefix\":\"status\", \"format\": \"json\"}"},
+    .c_command = {"{\"prefix\":\"status\", \"format\": \"json\"}", NULL},
     .c_result_ptr = NULL,
 };
+
+static struct ceph_command_t ceph_osd_perf =
+{
+    .c_name = "ceph osd perf",
+    .c_type = CEPH_OSD_PERF,
+    .c_command = {"{\"prefix\":\"osd perf\", \"format\": \"json\"}", NULL},
+    .c_result_ptr = NULL,
+};
+
+//static struct ceph_command_t ceph_osd_metadata =
+//{
+//    .c_name = "ceph osd metadata",
+//    .c_type = CEPH_OSD_METADATA,
+//    .c_command = NULL,
+//    .c_result_ptr = NULL,
+//};
 
 static int add_command(struct ceph_command_t * cmd)
 {
@@ -337,6 +353,7 @@ static int commands_register()
     add_command(&ceph_status);
     add_command(&ceph_osd_df);
     add_command(&ceph_osd_tree);
+    add_command(&ceph_osd_perf);
 
     return 0;
 }

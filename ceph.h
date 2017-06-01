@@ -20,6 +20,10 @@
 
 #define CEPH_OSD_DF        102
 
+#define CEPH_OSD_PERF      103
+
+#define CEPH_OSD_METADATA  104
+
 struct command_result_t {
     int c_type;
     char * c_json;
