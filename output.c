@@ -40,7 +40,7 @@ static struct guard_subsys output_subsys = {
     .s_mod_list = LIST_SELF(output_subsys.s_mod_list),
 };
 
-static void __init_output_init(void)
+static void __attribute__ ((constructor)) _output_init(void)
 {
     return module_register_subsys(&output_subsys);
 }
