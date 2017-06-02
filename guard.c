@@ -45,6 +45,8 @@ int main(int argc, char *argv[])
         update_timestamp(&rtiming.rt_next_read);
 
         for(;;) {
+            output_pre();
+
             update_timestamp(&e);
 
             if (timestamp_le(&rtiming.rt_next_read, &e)) {

@@ -29,4 +29,6 @@
 
 #include <rados/librados.h>
 
+#include <curses.h>
+
 #endif

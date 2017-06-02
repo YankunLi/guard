@@ -1,13 +1,13 @@
 EXENAME = guard
 #CC = gcc
-LIBS = -lrt -lrados
+LIBS = -lrt -lrados -lncurses
 CFLAGS = -o2
-objects = guard.o utils.o module.o ceph.o in_ceph.o input.o cJSON.o output.o
+objects = guard.o utils.o module.o ceph.o in_ceph.o input.o cJSON.o output.o out_curses.o
 
 $(EXENAME): $(objects)
 	$(CC) -o $@ $^ $(LIBS)
 
-$(objects): config.h guard.h utils.h module.h list.h input.h cJSON.h
+$(objects): config.h guard.h utils.h module.h list.h input.h cJSON.h output.h out_curses.h
 
 guard.o: guard.c
 	$(CC) -c $<
@@ -31,6 +31,9 @@ cJSON.o: cJSON.c
 	$(CC) -c $<
 
 output.o: output.c
+	$(CC) -c $<
+
+out_curses.o: out_curses.c
 	$(CC) -c $<
 
 clean:
