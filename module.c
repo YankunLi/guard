@@ -38,6 +38,22 @@ void module_foreach_run_enabled(struct guard_subsys *ss)
             m->m_do();
 }
 
+void module_foreach_run_enabled_pre(struct guard_subsys *ss)
+{
+    struct guard_module *m;
+    list_for_each_entry(m, &ss->s_mod_list, m_list)
+        if (m->m_pre)
+            m->m_pre();
+}
+
+void module_foreach_run_enabled_post(struct guard_subsys *ss)
+{
+    struct guard_module *m;
+    list_for_each_entry(m, &ss->s_mod_list, m_list)
+        if (m->m_post)
+            m->m_post();
+}
+
 static void module_foreach(struct guard_subsys *ss, void (*cb)(struct guard_module *m))
 {
     struct guard_module *m;

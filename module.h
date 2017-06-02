@@ -31,7 +31,7 @@ struct guard_module
     void (*m_parse_opt)(const char *, const char *);
     void (*m_pre)(void);
     void (*m_do)(void);
-    void (*m_post);
+    void (*m_post)(void);
 
     int m_flags;
     struct list_head m_list;
@@ -53,5 +53,7 @@ extern int module_register(struct guard_subsys *, struct guard_module *);
 extern void module_init(void);
 extern void module_register_subsys(struct guard_subsys *);
 extern void module_foreach_run_enabled(struct guard_subsys *);
+extern void module_foreach_run_enabled_pre(struct guard_subsys *);
+extern void module_foreach_run_enabled_post(struct guard_subsys *);
 
 #endif

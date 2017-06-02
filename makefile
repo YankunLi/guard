@@ -2,7 +2,7 @@ EXENAME = guard
 #CC = gcc
 LIBS = -lrt -lrados
 CFLAGS = -o2
-objects = guard.o utils.o module.o ceph.o in_ceph.o input.o cJSON.o
+objects = guard.o utils.o module.o ceph.o in_ceph.o input.o cJSON.o output.o
 
 $(EXENAME): $(objects)
 	$(CC) -o $@ $^ $(LIBS)
@@ -28,6 +28,9 @@ input.o: input.c
 	$(CC) -c $<
 
 cJSON.o: cJSON.c
+	$(CC) -c $<
+
+output.o: output.c
 	$(CC) -c $<
 
 clean:
