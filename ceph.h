@@ -53,6 +53,15 @@ struct ceph_commands_t {
 
 };
 
+struct commands_result_t {
+    char * c_name;
+
+    uint16_t c_count;
+    struct list_head c_cmd_result_list;
+
+    struct list_head c_list;
+};
+
 struct pool_info_t {
     uint64_t num_used_kb;
     uint64_t num_objects;
@@ -128,20 +137,12 @@ struct rados_osds_t {
     struct list_head rados_osds_list;
 };
 
-struct commands_result_t {
-    char * c_name;
-
-    uint16_t c_count;
-    struct list_head c_cmd_result_list;
-
-    struct list_head c_list;
-};
 
 extern int list_pools();
-extern void init_pool_ioctx();
+extern void init_pools_ioctx();
 extern int update_pool_stat();
 extern void read_pools_stat();
 extern int send_mon_command();
-extern void read_cluster_info();
+extern int read_info();
 
 #endif

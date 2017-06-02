@@ -168,19 +168,22 @@ static void check_command()
 static void prepare_commands()
 {
     DBG("prepare commands for reading cluster info");
-    struct ceph_command_t * cmd;
-    void * result;
+    struct ceph_command_t * cmd = NULL;
+    struct command_result_t * result = NULL;
     list_for_each_entry(cmd, &ceph_commands.c_commands_list, c_list)
     {
-        result = (void *) malloc(sizeof(struct command_result_t));
+        result = (struct command_result_t *) malloc(sizeof(struct command_result_t));
         if (!result)
         {
             DBG("failure of malloc");
             assert("malloc fail" == 0);
         }
-        cmd->c_result_ptr = (struct command_result_t *) result;
+        result->c_json = NULL;
+        result->c_status = NULL;
+        result->c_object = NULL;
+        cmd->c_result_ptr = result;
 
-        list_add_tail(result, &cmds_result.c_cmd_result_list);
+        list_add_tail(&result->c_list, &cmds_result.c_cmd_result_list);
         cmds_result.c_count++;
     }
 }
@@ -202,6 +205,7 @@ static int execute_command(struct ceph_command_t * cmd)
     char **st = &cmd->c_result_ptr->c_status;
     size_t * buf_len = &cmd->c_result_ptr->c_json_len;
     size_t * st_len = &cmd->c_result_ptr->c_status_len;
+    DBG("ececute command %s", cmd->c_name);
 
     ret = rados_mon_command(cluster, (const char **)cmd->c_command, 1, "", 0, buf, buf_len, st, st_len);
     if (ret < 0)
@@ -236,7 +240,7 @@ static void submit_commands()
     }
 }
 
-static void buffer_free(void * buf)
+static void buffer_free(char * buf)
 {
     if (buf)
         rados_buffer_free(buf);
@@ -244,14 +248,28 @@ static void buffer_free(void * buf)
 
 static void guard_buf_free()
 {
+    DBG("free memory");
     struct command_result_t * cmd_ret;
     list_for_each_entry(cmd_ret, &cmds_result.c_cmd_result_list, c_list)
     {
         if (cmd_ret->c_json)
-            buffer_free((void *) cmd_ret->c_json);
+        {
+            DBG("rados free");
+            buffer_free(cmd_ret->c_json);
+            cmd_ret->c_json = NULL;
+        }
 
         if (cmd_ret->c_status)
-            buffer_free((void *) cmd_ret->c_status);
+        {
+            buffer_free(cmd_ret->c_status);
+            cmd_ret->c_status = NULL;
+        }
+
+        if (cmd_ret->c_object)
+        {
+            cJSON_Delete(cmd_ret->c_object);
+            cmd_ret->c_object = NULL;
+        }
     }
 }
 
@@ -269,7 +287,7 @@ static void parse_json_format()
 static int transform()
 {}
 
-int read_ceph_info()
+int read_info()
 {
     if (ceph_commands.c_count <= 0)
     {
@@ -280,6 +298,9 @@ int read_ceph_info()
     check_command();
     submit_commands();
     parse_json_format();
+    transform();
+
+    guard_buf_free();
 
 //
 //    parse_cmd_result();
@@ -340,7 +361,7 @@ static int add_command(struct ceph_command_t * cmd)
     if (!cmd)
         return -EBUSY;
 
-    //DBG("add command %s into ceph_cmds %s", cmd.c_name, ceph_commands.c_name);
+    DBG("add command %s into ceph_cmds %s", cmd->c_name, ceph_commands.c_name);
     list_add_tail(&cmd->c_list, &ceph_commands.c_commands_list);
     ceph_commands.c_count++;
 
@@ -368,4 +389,6 @@ static void __attribute__ ((constructor)) __init_ceph_commands(void)
         DBG("don't found ceph commands %s", ceph_commands.c_name);
         assert("fail" == 0);
     }
+
+    prepare_commands();
 }
