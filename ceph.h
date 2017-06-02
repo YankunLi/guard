@@ -53,7 +53,7 @@ struct ceph_commands_t {
 
 };
 
-struct rados_pool_stat {
+struct pool_info_t {
     uint64_t num_used_kb;
     uint64_t num_objects;
     uint64_t num_object_clones;
@@ -65,11 +65,11 @@ struct rados_pool_stat {
     uint64_t num_wr_kb;
 };
 
-struct rados_pool {
+struct rados_pool_t {
     char * p_name;
     rados_ioctx_t p_ioctx;
 
-    struct rados_pool_stat pool_stat;
+    struct pool_info_t p_pool_info;
 
     struct list_head p_list;
 };
