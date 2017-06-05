@@ -12,6 +12,7 @@
 #include "input.h"
 #include "module.h"
 #include "ceph.h"
+#include "group.h"
 
 static struct guard_module ceph_ops;
 
@@ -19,6 +20,8 @@ rados_t cluster;
 static char cluster_name[] = "ceph", user_name[] = "client.admin";
 static char * c_path = "/etc/ceph/ceph.conf";
 uint64_t flags;
+
+static struct element_group *grp;
 
 static int ceph_probe(void)
 {
@@ -59,6 +62,8 @@ static int ceph_do_init(void)
     } else {
         DBG("Connected to the cluster.");
     }
+    if (!(grp = group_lookup("ceph-pools", 1)))
+            BUG();
     list_pools();
     init_pools_ioctx();
 

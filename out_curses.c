@@ -7,6 +7,10 @@
 #include "config.h"
 #include "output.h"
 #include "utils.h"
+#include "group.h"
+
+#define LIST_COL_1 25
+#define LIST_COL_2 75
 
 static int row;
 static int rows, cols;
@@ -46,6 +50,19 @@ static void put_line(const char *fmt, ...)
     xfree(buf);
 }
 
+#define NEXT_ROW()    \
+    do {              \
+        row++;        \
+        if (row >= rows - 1) \
+            return;          \
+        move(row, 0);        \
+    } while(0)
+
+static inline int line_visible(int line)
+{
+    return 1;
+}
+
 static void draw_header(void)
 {
     put_line("%s %c%s%c", "curses", '(', "", ')');
@@ -53,6 +70,47 @@ static void draw_header(void)
     move(row, COLS - strlen("guard 1.0") - 1);
     put_line("%s", "guard 1.0");
     move(row, 0);
+}
+
+static void draw_element()
+{}
+
+static void draw_group(struct element_group *g, void *arg)
+{
+    int *line = arg;
+
+    if (line_visible(*line)) {
+        NEXT_ROW();
+        attron(A_BOLD);
+        put_line("%s", g->g_hdr->gh_title);
+
+        attroff(A_BOLD);
+        mvaddch(row, LIST_COL_1, ACS_VLINE);
+        attron(A_BOLD);
+        put_line("%10s    %10s   %10s    %%", "col_1_1", "col_1_2", "col_1_3");
+
+        attroff(A_BOLD);
+        mvaddch(row, LIST_COL_2, ACS_VLINE);
+        attron(A_BOLD);
+        put_line("%10s    %10s", "col_2_1", "col_2_2");
+    }
+    (*line)++;
+
+ //   group_foreach_element(g, draw_element, arg);
+}
+
+static void draw_element_list(void)
+{
+    int line = 0;
+
+    group_foreach(draw_group, &line);
+
+}
+
+
+static void draw_context(void)
+{
+    draw_element_list();
 }
 
 static void curses_draw()
@@ -65,6 +123,8 @@ static void curses_draw()
     DBG("Screen height is %d width is %d", rows, cols);
 
     draw_header();
+
+    draw_context();
 
 out:
     attrset(0);
