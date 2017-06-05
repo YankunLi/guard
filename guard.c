@@ -59,10 +59,11 @@ int main(int argc, char *argv[])
                 timestamp_add(&rtiming.rt_next_read, &rtiming.rt_next_read, &c);
 
                 //process
-                system("clear");
-                printf("%s\n", "hello world");
+               // system("clear");
+               // printf("%s\n", "hello world");
                 input_read();
-                fflush(stdout);
+                output_draw();
+               // fflush(stdout);
             }
             st = sleep_time;
 

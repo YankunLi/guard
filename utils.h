@@ -16,4 +16,6 @@ extern void update_timestamp(timestamp_t *dst);
 extern int timestamp_le(timestamp_t *a, timestamp_t *b);
 extern void copy_timestamp(timestamp_t *ts1, timestamp_t *ts2);
 
+extern void *xcalloc(size_t n, size_t s);
+extern void xfree(void *d);
 #endif

@@ -58,3 +58,21 @@ void update_timestamp(timestamp_t *ts)
     ts->tv_sec = tp.tv_sec;
     ts->tv_usec = tp.tv_nsec / 1000;
 }
+
+void * xcalloc(size_t n, size_t s)
+{
+    void *d = calloc(n, s);
+    if (NULL == d)
+    {
+        fprintf(stderr, "calloc: out of memory\n");
+        exit(ENOMEM);
+    }
+
+    return d;
+}
+
+void xfree(void *d)
+{
+    if (d)
+        free(d);
+}

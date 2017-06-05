@@ -34,6 +34,7 @@ struct reader_timing
 #define ARRAY_SIZE(ARRAY) (sizeof(ARRAY) / sizeof(ARRAY[0]))
 
 #define DEBUG 1
+#undef DEBUG
 
 #ifdef DEBUG
 #define DBG(FMT, ARG...) \
