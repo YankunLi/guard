@@ -92,6 +92,6 @@ static void __attribute__ ((constructor)) group_init(void)
 {
     DBG("init group");
 
-    group_new_hdr("ceph-pools", "Pools", "total_size", "used_size",
-            "avaible_size", "rd_kB", "wr_kB");
+    group_new_hdr("ceph-pools", "Pools", "Total Size", "Used Size",
+            "Avaible Size", "RD_kB", "WR_kB");
 }
