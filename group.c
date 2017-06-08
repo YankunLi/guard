@@ -23,7 +23,25 @@ void group_foreach(void (*cb)(struct element_group *, void *), void *arg)
         cb(g, arg);
 }
 
+static void __group_foreach_element(struct element_group *g,
+                    struct list_head *list,
+                    void (*cb)(struct element_group *,
+                        struct element *, void *),
+                    void *arg)
+{
+    struct element *e, *n;
 
+    list_for_each_entry_safe(e, n, list, e_list) {
+        cb(g, e, arg);
+    }
+}
+
+void group_foreach_element(struct element_group *g,
+                void (*cb)(struct element_group *,
+                    struct element *, void *), void *arg)
+{
+    __group_foreach_element(g, &g->g_elements, cb, arg);
+}
 
 static struct group_hdr *group_lookup_hdr(const char *name)
 {

@@ -36,4 +36,7 @@ struct element_group
 
 extern void group_foreach(void (*cb)(struct element_group *, void *), void *arg);
 extern struct element_group *group_lookup(const char *name, int flags);
+extern void group_foreach_element(struct element_group*,
+                    void (*cb)(struct element_group *,
+                        struct element *, void *), void *arg);
 #endif
