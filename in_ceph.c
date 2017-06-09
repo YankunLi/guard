@@ -16,6 +16,7 @@
 
 static struct guard_module ceph_ops;
 
+static int cluster_initialized = 0;
 rados_t cluster;
 static char cluster_name[] = "ceph", user_name[] = "client.admin";
 static char * c_path = "/etc/ceph/ceph.conf";
@@ -44,6 +45,7 @@ static int ceph_do_init(void)
         DBG("Couldn't create the cluster handle!");
         BUG();
     } else {
+        cluster_initialized = 1;
         DBG("Create a cluster handle.");
     }
 
@@ -92,6 +94,12 @@ static void __attribute__ ((constructor)) ceph_init(void)
     DBG("register input module %s", ceph_ops.m_name);
 
     input_register(&ceph_ops);
+}
+
+static void __attribute__ ((destructor)) distroy_handle(void)
+{
+    if (cluster_initialized)
+        rados_shutdown(cluster);
 }
 
 #endif
