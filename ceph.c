@@ -33,6 +33,19 @@ struct rados_cluster_pool_t cluster_pool =
     .c_has_initialized = 0,
 };
 
+static void __destroy_ioctx(rados_ioctx_t io)
+{
+        rados_ioctx_destroy(io);
+}
+
+void destroy_ioctxs(struct list_head *list)
+{
+    struct rados_pool_t *rados_pool;
+    list_for_each_entry(rados_pool, list, p_list)
+        __destroy_ioctx(rados_pool->p_ioctx);
+
+}
+
 int list_pools()
 {
     if(cluster_pool.c_has_initialized)
