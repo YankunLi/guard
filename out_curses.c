@@ -119,9 +119,54 @@ static void draw_element(struct element_group *g, struct element *e, void *arg)
     }
 }
 
+//char * unit_value(uint64_t v)
+//{
+//    int val
+//    if (val = v/(1024*1024*1024))
+//    {
+//
+//    }
+//}
+
+static void __draw_global_mon(struct mon_t *mon, int interval)
+{
+    NEXT_ROW();
+    mvprintw(row, interval/2 - 28, "%10s%24s%6d%18s",
+            mon->m_name, mon->m_addr, mon->m_rank, mon->m_health);
+    mvaddch(row,  interval * 1, ACS_VLINE);
+    mvprintw(row, interval + interval/2 - 28, "%10d    %10d    %10d    %10d",
+            mon->m_kb_total, mon->m_kb_used, mon->m_kb_avail, mon->m_avail_percent);
+}
+
+static void draw_global_mon()
+{
+    int col_size = 2;
+    int interval_size = cols / 2;
+    int half_interval = interval_size / 2;
+
+    struct mon_t *mon_ptr;
+
+    mvprintw(row, half_interval - 28, "%10s%18s%13s%15s",
+            "Monitor", "Address", "Rank", "Status");
+    mvaddch(row,  interval_size * 1, ACS_VLINE);
+    mvprintw(row, interval_size + half_interval - 28 , "%10s    %10s    %10s    %14s",
+            "Total Size", "Used Size", "Avail Size", "Avail Percent");
+    list_for_each_entry(mon_ptr, &global_info->g_mon_servers->g_mons, m_list)
+        __draw_global_mon(mon_ptr, interval_size);
+
+    NEXT_ROW();
+    hline(ACS_HLINE, cols);
+    mvaddch(row,  interval_size * 1, ACS_BTEE);
+
+
+}
+
 static void draw_global_info()
 {
     int col_size = 3;
+    int s_col_size = 2;
+    int s_server_interval_size = cols / s_col_size;
+    int s_half_interval = s_server_interval_size / 2;
     int interval_size = cols / col_size;
     int half_interval = interval_size / 2;
 
@@ -158,6 +203,36 @@ static void draw_global_info()
     hline(ACS_HLINE, cols);
     mvaddch(row,  interval_size * 1, ACS_BTEE);
     mvaddch(row,  interval_size * 2, ACS_BTEE);
+
+    mvaddch(row, s_server_interval_size * 1, ACS_TTEE);
+    //storage servers
+    NEXT_ROW();
+    //draw header
+    /* int location = s_half_interval - strlen(" "); */
+    move(row, s_half_interval - 20);
+    put_line("%10s    %10s    %10s", "Total OSDs", "UP OSDs", "IN OSDs");
+    /* put_line("%10s    %10s    %10s",global_info->g_storage_servers.g_num ); */
+    mvaddch(row, s_server_interval_size * 1, ACS_VLINE);
+    move(row, s_server_interval_size + s_half_interval - 20);
+    put_line("%10s    %10s    %10s", "FULL", "NEARFULL", "Remapped Pgs");
+
+    NEXT_ROW();
+    move(row, s_half_interval - 22);
+    put_line("%10d    %10d    %10d", global_info->g_storage_servers.g_num_osds,
+            global_info->g_storage_servers.g_num_up_osds,
+            global_info->g_storage_servers.g_num_in_osds);
+    mvaddch(row, s_server_interval_size * 1, ACS_VLINE);
+    move(row, s_server_interval_size + s_half_interval - 22);
+    put_line("%10d    %10d    %10d", global_info->g_storage_servers.g_full,
+            global_info->g_storage_servers.g_nearfull,
+            global_info->g_storage_servers.g_num_remapped_pgs);
+
+    NEXT_ROW();
+    hline(ACS_HLINE, cols);
+    mvaddch(row,  s_server_interval_size * 1, ACS_BTEE);
+
+    NEXT_ROW();
+    draw_global_mon();
 
 }
 
