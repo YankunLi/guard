@@ -8,6 +8,7 @@
 #include "output.h"
 #include "utils.h"
 #include "group.h"
+#include "element.h"
 
 #define LIST_COL_1 25
 #define LIST_COL_2 75
@@ -18,6 +19,10 @@ static int rows, cols;
 static int initialized;
 
 static int c_use_color;
+
+static struct global_info_t *global_info = NULL;
+
+static int c_disable_global_info = 0;
 
 static int handle_input(int ch)
 {
@@ -114,6 +119,48 @@ static void draw_element(struct element_group *g, struct element *e, void *arg)
     }
 }
 
+static void draw_global_info()
+{
+    int col_size = 3;
+    int interval_size = cols / col_size;
+    int half_interval = interval_size / 2;
+
+    if (c_disable_global_info)
+        return;
+
+    if (!global_info)
+        global_info = get_global_info();
+
+    //draw header for global info
+    mvprintw(row, half_interval - strlen("FSID")/2, "%s", "FSID");
+
+    mvaddch(row,  interval_size * 1, ACS_VLINE);
+    mvprintw(row, interval_size * 1 + half_interval - strlen("Status")/2,
+            "%s", "Status");
+
+    mvaddch(row, interval_size * 2, ACS_VLINE);
+    mvprintw(row, interval_size * 2 + half_interval - strlen("Summary")/2,
+            "%s", "Summary");
+    //draw global info
+    NEXT_ROW();
+    mvprintw(row, half_interval - strlen(global_info->g_fsid)/2,"%s",
+            global_info->g_fsid);
+
+    mvaddch(row,  interval_size * 1, ACS_VLINE);
+    mvprintw(row, interval_size * 1 + half_interval - strlen(global_info->g_status)/2,
+            "%s", global_info->g_status);
+
+    mvaddch(row, interval_size * 2, ACS_VLINE);
+    mvprintw(row, interval_size * 2 + half_interval - strlen(global_info->g_summary)/2,
+            "%s", global_info->g_summary);
+
+    NEXT_ROW();
+    hline(ACS_HLINE, cols);
+    mvaddch(row,  interval_size * 1, ACS_BTEE);
+    mvaddch(row,  interval_size * 2, ACS_BTEE);
+
+}
+
 static void draw_group(struct element_group *g, void *arg)
 {
     int *line = arg;
@@ -192,6 +239,11 @@ static void curses_draw()
     DBG("Screen height is %d width is %d", rows, cols);
 
     draw_header();
+    NEXT_ROW();
+
+    put_line("rows : %d, cols : %d", rows, cols);
+    NEXT_ROW();
+    draw_global_info();
 
     draw_context();
 

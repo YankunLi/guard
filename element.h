@@ -35,4 +35,64 @@ struct element
     float e_rd_kB, e_wr_kB;
 };
 
+struct global_osdmap_t {
+    unsigned long g_epoch;
+    uint16_t g_num_osds;
+    uint16_t g_num_up_osds;
+    uint16_t g_num_in_osds;
+    int g_full;
+    int g_nearfull;
+    int g_num_remapped_pgs;
+};
+
+struct global_usage_t {
+    int num_pgs;
+    uint64_t data_bytes;
+    uint64_t bytes_used;
+    uint64_t bytes_avail;
+    uint64_t bytes_total;
+
+    struct rate_t {
+        uint64_t read_bytes_sec;
+        uint64_t write_bytes_sec;
+        uint32_t op_per_sec;
+    } usage_rate;
+};
+
+struct mon_t {
+    char m_name[40];
+    uint64_t m_kb_total;
+    uint64_t m_kb_used;
+    uint64_t m_kb_avail;
+    int m_avail_percent;
+
+    char m_addr[40];
+    int m_rank;
+    char m_health[20];
+
+    struct list_head m_list;
+};
+
+struct global_mon_t {
+    int g_mon_size;
+    struct list_head g_mons;
+};
+
+struct global_info_t {
+    //osdmap
+    struct global_osdmap_t g_storage_servers;
+
+    //pgmap
+    struct global_usage_t g_usage;
+
+    //monmap
+    struct global_mon_t *g_mon_servers;
+
+    char g_fsid[40];
+    char g_status[20];
+    char g_summary[64];
+};
+
+extern struct global_info_t * get_global_info(void);
+
 #endif

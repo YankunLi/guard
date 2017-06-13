@@ -3,7 +3,7 @@ EXENAME = guard
 LIBS = -lrt -lrados -lncurses
 CFLAGS = -o2
 objects = guard.o utils.o module.o ceph.o in_ceph.o input.o cJSON.o output.o out_curses.o \
-		  group.o
+		  group.o element.o
 
 $(EXENAME): $(objects)
 	$(CC) -o $@ $^ $(LIBS)
@@ -39,6 +39,9 @@ out_curses.o: out_curses.c
 	$(CC) -c $<
 
 group.o: group.c
+	$(CC) -c $<
+
+element.o: element.c
 	$(CC) -c $<
 
 clean:
