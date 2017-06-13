@@ -157,8 +157,6 @@ static void draw_global_mon()
     NEXT_ROW();
     hline(ACS_HLINE, cols);
     mvaddch(row,  interval_size * 1, ACS_BTEE);
-
-
 }
 
 static void draw_global_info()
