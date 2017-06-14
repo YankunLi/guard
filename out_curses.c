@@ -24,6 +24,60 @@ static struct global_info_t *global_info = NULL;
 
 static int c_disable_global_info = 0;
 
+static uint64_t scale[7] = {
+    1024 * 0, // B
+    1024 * 1, // KB
+    1024 * 2, // MB
+    1024 * 3, // GB
+    1024 * 4, // TB
+    1024 * 5, // PB
+    1024 * 6, // EB
+};
+
+static char *unit_array[7] = {
+    "B",
+    "KB",
+    "MB",
+    "GB",
+    "TB",
+    "PB",
+    "EB",
+};
+
+enum {
+    B,
+    KB,
+    MB,
+    GB,
+    TB,
+    PB,
+    EB,
+};
+
+
+static char * unit_value(uint64_t value, int unit)
+{
+    static char val_unit[20];
+    float new_value;
+
+    int i = ARRAY_SIZE(scale) - 1;
+    for (; i > 0; i--)
+    {
+        if (value / scale[i])
+        {
+            new_value = value * 0.1 / scale[i];
+            goto out;
+        }
+    }
+
+out:
+    if (i + unit > 6)
+        exit(1);
+
+    snprintf(val_unit, 9, "%f %s", new_value, unit_array[i + unit]);
+    return val_unit;
+}
+
 static int handle_input(int ch)
 {
     return 0;
