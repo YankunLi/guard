@@ -141,7 +141,7 @@ static void __draw_global_mon(struct mon_t *mon, int interval)
 static void draw_global_mon()
 {
     int col_size = 2;
-    int interval_size = cols / 2;
+    int interval_size = cols / col_size;
     int half_interval = interval_size / 2;
 
     struct mon_t *mon_ptr;
@@ -157,6 +157,43 @@ static void draw_global_mon()
     NEXT_ROW();
     hline(ACS_HLINE, cols);
     mvaddch(row,  interval_size * 1, ACS_BTEE);
+}
+
+static void draw_resource_usage()
+{
+    int col_size = 2;
+    int interval_size = cols / col_size;
+    int half_interval = interval_size / 2;
+
+    mvprintw(row, interval_size * 1 / 2 - 8, "%s", "Storage Resource");
+    mvaddch(row,  interval_size * 1, ACS_VLINE);
+
+    mvprintw(row, interval_size * 1 +  half_interval - 4, "%s",
+            "Client IO");
+
+    NEXT_ROW();
+    move(row, half_interval - 28);
+    put_line("%10s%10s%10s%10s%10s", "PGS", "Data", "Used", "Avail", "Total");
+    mvaddch(row,  interval_size * 1, ACS_VLINE);
+    move(row, interval_size * 1 + half_interval - 18);
+    put_line("%10s%10s%10s", "RD", "WR", "OP");
+
+    NEXT_ROW();
+    move(row, half_interval - 28);
+    put_line("%10ld%10ld%10ld%10ld%10ld", global_info->g_usage.num_pgs,
+            global_info->g_usage.data_bytes,
+            global_info->g_usage.bytes_used,
+            global_info->g_usage.bytes_avail,
+            global_info->g_usage.bytes_total);
+    mvaddch(row,  interval_size * 1, ACS_VLINE);
+    move(row, interval_size * 1 + half_interval - 18);
+    put_line("%10ld%10ld%10ld", global_info->g_usage.usage_rate.read_bytes_sec,
+            global_info->g_usage.usage_rate.write_bytes_sec,
+            global_info->g_usage.usage_rate.op_per_sec);
+
+    NEXT_ROW();
+    hline(ACS_HLINE, cols);
+    mvaddch(row, interval_size * 1, ACS_BTEE);
 }
 
 static void draw_global_info()
@@ -231,6 +268,9 @@ static void draw_global_info()
 
     NEXT_ROW();
     draw_global_mon();
+
+    NEXT_ROW();
+    draw_resource_usage();
 
 }
 
