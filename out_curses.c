@@ -25,13 +25,13 @@ static struct global_info_t *global_info = NULL;
 static int c_disable_global_info = 0;
 
 static uint64_t scale[7] = {
-    1024 * 0, // B
-    1024 * 1, // KB
-    1024 * 2, // MB
-    1024 * 3, // GB
-    1024 * 4, // TB
-    1024 * 5, // PB
-    1024 * 6, // EB
+    1, // B
+    1 << 10, //1024  1024 KB
+    1 << 20, // 1024 * 1024 MB
+    1 << 30, //1024 * 1024 * 1024,  GB
+//    1 << 40, //1024 * 1024 * 1024,  TB
+//    1 << 50, // 1024 ^ 5,  PB
+//    1 << 60 // 1024 ^ 6 EB
 };
 
 static char *unit_array[7] = {
@@ -39,9 +39,9 @@ static char *unit_array[7] = {
     "KB",
     "MB",
     "GB",
-    "TB",
-    "PB",
-    "EB",
+//    "TB",
+//    "PB",
+//    "EB",
 };
 
 enum {
@@ -49,33 +49,35 @@ enum {
     KB,
     MB,
     GB,
-    TB,
-    PB,
-    EB,
+//    TB,
+//    PB,
+//    EB,
 };
 
 
-static char * unit_value(uint64_t value, int unit)
+static void unit_value(uint64_t value, int unit, char *buf)
 {
-    static char val_unit[20];
-    float new_value;
+    int new_value;
 
-    int i = ARRAY_SIZE(scale) - 1;
+    int i = 3; //ARRAY_SIZE(scale) - 1;
     for (; i > 0; i--)
     {
         if (value / scale[i])
         {
-            new_value = value * 0.1 / scale[i];
+            new_value = value / scale[i];
             goto out;
         }
     }
+
+    new_value = value;
 
 out:
     if (i + unit > 6)
         exit(1);
 
-    snprintf(val_unit, 9, "%f %s", new_value, unit_array[i + unit]);
-    return val_unit;
+    snprintf(buf, strlen(buf) - 1, "%d%s", new_value, unit_array[i + unit]);
+
+    return;
 }
 
 static int handle_input(int ch)
@@ -215,6 +217,8 @@ static void draw_global_mon()
 
 static void draw_resource_usage()
 {
+    char temp_value[100];
+    char *ptr1, *ptr2, *ptr3, *ptr4, *ptr5, *ptr6;
     int col_size = 2;
     int interval_size = cols / col_size;
     int half_interval = interval_size / 2;
@@ -227,22 +231,49 @@ static void draw_resource_usage()
 
     NEXT_ROW();
     move(row, half_interval - 28);
-    put_line("%10s%10s%10s%10s%10s", "PGS", "Data", "Used", "Avail", "Total");
+    put_line("%10s%10.5s%10s%10s%10s", "PGS", "Data", "Used", "Avail", "Total");
     mvaddch(row,  interval_size * 1, ACS_VLINE);
     move(row, interval_size * 1 + half_interval - 18);
-    put_line("%10s%10s%10s", "RD", "WR", "OP");
+    put_line("%10s  %10s  %10s", "RD", "WR", "OP");
+
+    memset(temp_value, '\0', sizeof(temp_value));
+    ptr1 = temp_value;
+    unit_value(global_info->g_usage.data_bytes, B, ptr1);
+    ptr2 = ptr1 + strlen(ptr1) + 1;
+    unit_value(global_info->g_usage.bytes_used, B, ptr2);
+    ptr3 = ptr2 + strlen(ptr2) + 1;
+    unit_value(global_info->g_usage.bytes_avail, B, ptr3);
+    ptr4 = ptr3 + strlen(ptr3) + 1;
+    unit_value(global_info->g_usage.bytes_total, B, ptr4);
+
+    if (temp_value + 99 < ptr4 + strlen(ptr4))
+        exit(1);
 
     NEXT_ROW();
     move(row, half_interval - 28);
-    put_line("%10ld%10ld%10ld%10ld%10ld", global_info->g_usage.num_pgs,
-            global_info->g_usage.data_bytes,
-            global_info->g_usage.bytes_used,
-            global_info->g_usage.bytes_avail,
-            global_info->g_usage.bytes_total);
+//    put_line("%10d%10s%10s%10s%10s", global_info->g_usage.num_pgs,
+//            unit_value(global_info->g_usage.data_bytes, B),
+//            unit_value(global_info->g_usage.bytes_used, B),
+//            unit_value(global_info->g_usage.bytes_avail, B),
+//            unit_value(global_info->g_usage.bytes_total, B));
+    put_line("%10d%10s%10s%10s%10s", global_info->g_usage.num_pgs,
+            ptr1,
+            ptr2,
+            ptr3,
+            ptr4);
+
+    ptr5 = ptr4 + strlen(ptr4) + 1;
+    unit_value(global_info->g_usage.usage_rate.read_bytes_sec, B, ptr5);
+    ptr6 = ptr5 + strlen(ptr5) + 1;
+    unit_value(global_info->g_usage.usage_rate.write_bytes_sec, B, ptr6);
+
+    if (temp_value + 99 < ptr6 + strlen(ptr6))
+        exit(1);
+
     mvaddch(row,  interval_size * 1, ACS_VLINE);
     move(row, interval_size * 1 + half_interval - 18);
-    put_line("%10ld%10ld%10ld", global_info->g_usage.usage_rate.read_bytes_sec,
-            global_info->g_usage.usage_rate.write_bytes_sec,
+    put_line("%10s/s%10s/s%10d/s", ptr5,
+            ptr6,
             global_info->g_usage.usage_rate.op_per_sec);
 
     NEXT_ROW();

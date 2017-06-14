@@ -32,7 +32,7 @@ static void __attribute__  ((constructor)) bind_global_mons()
     global_info.g_mon_servers = &global_mon;
 
     //add test data for global info to test curses
-    //global 
+    //global
     strcpy(global_info.g_fsid, "xxxxx-xxxxxx-xxxxxxx-xxxxxxxx");
     strcpy(global_info.g_status, "HEALTH_WARN");
     strcpy(global_info.g_summary, "noout flag(s) set");
@@ -65,8 +65,8 @@ static void __attribute__  ((constructor)) bind_global_mons()
 
     //global_usage
     global_info.g_usage.num_pgs = 1144;
-    global_info.g_usage.data_bytes = 5784683876643;
-    global_info.g_usage.bytes_used = 11530439438336;
+    global_info.g_usage.data_bytes =  5784683876643;
+    global_info.g_usage.bytes_used =  11530439438336;
     global_info.g_usage.bytes_avail = 42253956984832;
     global_info.g_usage.bytes_total = 53784396423168;
     global_info.g_usage.usage_rate.read_bytes_sec = 23;
