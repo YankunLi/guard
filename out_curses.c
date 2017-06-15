@@ -82,6 +82,16 @@ out:
 
 static int handle_input(int ch)
 {
+    switch (ch)
+    {
+        case KEY_CLEAR:
+            clear();
+            return 1;
+
+        case 'c':
+            clear();
+            return 1;
+    }
     return 0;
 }
 
@@ -429,17 +439,24 @@ static void draw_statusbar(void)
 
 static void curses_draw()
 {
+    static int old_rows_and_cols = 0;
     row = 0;
     move(0, 0);
 
     getmaxyx(stdscr, rows, cols);
 
+    if (old_rows_and_cols != rows + cols)
+    {
+        old_rows_and_cols = rows + cols;
+        clear();
+    }
+
     DBG("Screen height is %d width is %d", rows, cols);
 
     draw_header();
-    NEXT_ROW();
-
-    put_line("rows : %d, cols : %d", rows, cols);
+//    NEXT_ROW();
+//
+//    put_line("rows : %d, cols : %d", rows, cols);
     NEXT_ROW();
     draw_global_info();
 
