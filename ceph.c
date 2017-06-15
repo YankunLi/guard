@@ -8,8 +8,16 @@
 #include "ceph.h"
 #include "config.h"
 #include "guard.h"
+#include "group.h"
 
-extern rados_t cluster;
+static rados_t cluster;
+static int cluster_initialized = 0;
+static uint64_t flags;
+
+static char cluster_name[] = "ceph", user_name[] = "client.admin";
+static char * c_path = "/etc/ceph/ceph.conf";
+
+static struct element_group *grp;
 
 static struct ceph_commands_t ceph_commands =
 {
@@ -38,7 +46,7 @@ static void __destroy_ioctx(rados_ioctx_t io)
         rados_ioctx_destroy(io);
 }
 
-void destroy_ioctxs(struct list_head *list)
+static void destroy_ioctxs(struct list_head *list)
 {
     struct rados_pool_t *rados_pool;
     list_for_each_entry(rados_pool, list, p_list)
@@ -46,7 +54,7 @@ void destroy_ioctxs(struct list_head *list)
 
 }
 
-int list_pools()
+static int list_pools()
 {
     if(cluster_pool.c_has_initialized)
         return 0;
@@ -82,7 +90,7 @@ int list_pools()
     return 0;
 }
 
-void init_pools_ioctx()
+static void init_pools_ioctx()
 {
     int ret = 0;
     struct rados_pool_t *p;
@@ -96,7 +104,45 @@ void init_pools_ioctx()
     }
 }
 
-int update_pool_stat(struct rados_pool_t * pool)
+int ceph_init(void)
+{
+    DBG("init ceph module");
+
+    int err;
+    //create a cluster handle.
+    err = rados_create2(&cluster, cluster_name, user_name, flags);
+    if (err < 0) {
+        DBG("Couldn't create the cluster handle!");
+        BUG();
+    } else {
+        cluster_initialized = 1;
+        DBG("Create a cluster handle.");
+    }
+
+    //read ceph config file.
+    err = rados_conf_read_file(cluster, c_path);
+    if (err < 0) {
+        DBG("cannot read config file %s", c_path);
+    } else {
+        DBG("Read the config file.");
+    }
+
+    //connect to the cluster.
+    err = rados_connect(cluster);
+    if (err < 0) {
+        DBG("cannot connect to cluster.");
+    } else {
+        DBG("Connected to the cluster.");
+    }
+    if (!(grp = group_lookup("ceph-pools", 1)))
+            BUG();
+    list_pools();
+    init_pools_ioctx();
+
+    return 0;
+}
+
+static int update_pool_stat(struct rados_pool_t * pool)
 {
     int ret = 0;
     struct rados_pool_stat_t st;
@@ -120,14 +166,14 @@ int update_pool_stat(struct rados_pool_t * pool)
     return ret;
 }
 
-void read_pools_stat()
+static void read_pools_stat()
 {
     struct rados_pool_t *p;
     list_for_each_entry(p, &cluster_pool.c_pools_list, p_list)
         update_pool_stat(p);
 }
 
-int send_mon_command()
+static int send_mon_command()
 {
     int ret = 0;
     char *buf, *st;
@@ -404,4 +450,10 @@ static void __attribute__ ((constructor)) __init_ceph_commands(void)
     }
 
     prepare_commands();
+}
+
+void destroy_handle(void)
+{
+    if (cluster_initialized)
+        rados_shutdown(cluster);
 }

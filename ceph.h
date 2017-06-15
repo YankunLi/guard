@@ -138,11 +138,8 @@ struct rados_osds_t {
 };
 
 
-extern int list_pools();
-extern void init_pools_ioctx();
-extern int update_pool_stat();
-extern void read_pools_stat();
-extern int send_mon_command();
 extern int read_info();
+extern int ceph_init();
+extern void destroy_handle();
 
 #endif

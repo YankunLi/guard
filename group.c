@@ -81,7 +81,8 @@ struct element_group *group_lookup(const char *name, int flags)
 
 static int group_new_hdr(const char *name, const char *title,
         const char *col1, const char *col2, const char *col3,
-        const char *col4, const char *col5)
+        const char *col4, const char *col5, const char *col6,
+        const char *col7, const char *col8)
 {
     struct group_hdr *hdr;
     if (group_lookup_hdr(name))
@@ -99,6 +100,9 @@ static int group_new_hdr(const char *name, const char *title,
     hdr->gh_column[2] = strdup(col3);
     hdr->gh_column[3] = strdup(col4);
     hdr->gh_column[4] = strdup(col5);
+    hdr->gh_column[5] = strdup(col6);
+    hdr->gh_column[6] = strdup(col7);
+    hdr->gh_column[7] = strdup(col8);
 
     list_add_tail(&hdr->gh_list, &titles_list);
 
@@ -110,6 +114,6 @@ static void __attribute__ ((constructor)) group_init(void)
 {
     DBG("init group");
 
-    group_new_hdr("ceph-pools", "Pools", "Total Size", "Used Size",
-            "Avaible Size", "RD_kB", "WR_kB");
+    group_new_hdr("ceph-pools", "Pools", "Used Size", "Objects",
+            "Object Clones", "Object copies", "RD", "RD_KB", "WR", "WR_KB");
 }

@@ -11,7 +11,7 @@
 #include "list.h"
 #include "element.h"
 
-#define GROUP_COL_MAX 5
+#define GROUP_COL_MAX 8
 
 struct group_hdr
 {

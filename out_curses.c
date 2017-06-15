@@ -10,8 +10,8 @@
 #include "group.h"
 #include "element.h"
 
-#define LIST_COL_1 25
-#define LIST_COL_2 75
+#define LIST_COL_1 20
+#define LIST_COL_2 60
 
 static int row;
 static int rows, cols;
@@ -172,14 +172,26 @@ static void draw_element(struct element_group *g, struct element *e, void *arg)
 
     if (line_visible(*line)) {
         NEXT_ROW();
+        put_line("  %10", e->e_name);
+        mvaddch(row, LIST_COL_1, ACS_VLINE);
 
-        char pad[64];
-        memset(pad, 0, sizeof(pad));
-        memset(pad, ' ', 4);
+        put_line("  %-15d%15d", e->e_num_used_kb,
+                e->e_num_objects);
 
-        strncat(pad, "openstack", sizeof(pad) - strlen(pad) - 1);
+        mvaddch(row, LIST_COL_2, ACS_VLINE);
+        put_line("  %-10s%-10s %10s%10s",
+                e->e_num_rd,
+                e->e_num_rd_kb,
+                e->e_num_wr,
+                e->e_num_wr_kb);
 
-        put_line("%-30.30%", pad);
+//        char pad[64];
+//        memset(pad, 0, sizeof(pad));
+//        memset(pad, ' ', 4);
+//
+//        strncat(pad, "openstack", sizeof(pad) - strlen(pad) - 1);
+//
+//        put_line("%-30.30%", pad);
 
         draw_attr();
     }
@@ -376,25 +388,30 @@ static void draw_group(struct element_group *g, void *arg)
     if (line_visible(*line)) {
         NEXT_ROW();
         attron(A_BOLD);
-        put_line("%s", g->g_hdr->gh_title);
+        put_line("  %10s", g->g_hdr->gh_title);
 
         attroff(A_BOLD);
         mvaddch(row, LIST_COL_1, ACS_VLINE);
         attron(A_BOLD);
-        put_line("%10s    %10s    %10s    %%", g->g_hdr->gh_column[0],
-                g->g_hdr->gh_column[1], g->g_hdr->gh_column[2]);
+        put_line("  %-15s%15s",
+                g->g_hdr->gh_column[0],
+                g->g_hdr->gh_column[1]);
 
         attroff(A_BOLD);
         mvaddch(row, LIST_COL_2, ACS_VLINE);
         attron(A_BOLD);
-        put_line("%10s    %10s    %%", g->g_hdr->gh_column[3], g->g_hdr->gh_column[4]);
+        put_line("  %-10s%-10s %10s%10s",
+                g->g_hdr->gh_column[4],
+                g->g_hdr->gh_column[5],
+                g->g_hdr->gh_column[6],
+                g->g_hdr->gh_column[7]);
         attroff(A_BOLD);
-        NEXT_ROW();
-        char pad[32];
-        memset(pad, 0, sizeof(pad));
-        memset(pad, 'w', 6);
-        strncat(pad, "openstack", sizeof(pad) - strlen(pad) - 1);
-        put_line("%-30.30s", pad);
+//        NEXT_ROW();
+//        char pad[32];
+//        memset(pad, 0, sizeof(pad));
+//        memset(pad, 'w', 6);
+//        strncat(pad, "openstack", sizeof(pad) - strlen(pad) - 1);
+//        put_line("%-30.30s", pad);
     }
     (*line)++;
 

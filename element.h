@@ -15,24 +15,30 @@ struct element
     char * e_name;
     char * e_description;
     uint32_t e_id;
-    uint32_t e_flags;
-    unsigned int e_lifecycles;
-    unsigned int e_level;
+//    uint32_t e_flags;
+//    unsigned int e_lifecycles;
+//    unsigned int e_level;
 
-    struct element * e_parent;
     struct element_group * e_group;
 
     struct list_head e_list;
-    struct list_head e_childs;
 
     unsigned int e_nattrs;
-    struct list_head e_attrhash[32];
-    struct list_head e_attr_sorted;
+    struct list_head e_attrs;
+//    struct list_head e_attrhash[32];
 
     unsigned int e_ninfo;
-    struct list_head e_info_list;
+//    struct list_head e_info_list;
 
-    float e_rd_kB, e_wr_kB;
+    uint64_t e_num_used_kb;
+    uint64_t e_num_objects;
+    uint64_t e_num_object_clones;
+    uint64_t e_num_object_copies;
+
+    uint64_t e_num_rd;
+    uint64_t e_num_rd_kb;
+    uint64_t e_num_wr;
+    uint64_t e_num_wr_kb;
 };
 
 struct global_osdmap_t {
