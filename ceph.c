@@ -9,6 +9,7 @@
 #include "config.h"
 #include "guard.h"
 #include "group.h"
+#include "element.h"
 
 static rados_t cluster;
 static int cluster_initialized = 0;
@@ -17,7 +18,7 @@ static uint64_t flags;
 static char cluster_name[] = "ceph", user_name[] = "client.admin";
 static char * c_path = "/etc/ceph/ceph.conf";
 
-static struct element_group *grp;
+static struct element_group *grp = NULL;
 
 static struct ceph_commands_t ceph_commands =
 {
@@ -50,42 +51,51 @@ static void destroy_ioctxs(struct list_head *list)
 {
     struct rados_pool_t *rados_pool;
     list_for_each_entry(rados_pool, list, p_list)
+        if (rados_pool->ioctx_initialized)
         __destroy_ioctx(rados_pool->p_ioctx);
 
 }
 
 static int list_pools()
 {
+    const char *buf_ptr;
+    struct rados_pool_t * pool_ptr;
+
     if(cluster_pool.c_has_initialized)
         return 0;
 
     int buf_sz = rados_pool_list(cluster, NULL, 0);
+    if (buf_sz < 0)
+    {
+        return -1;
+    }
+
     char buf[buf_sz];
     int ret = rados_pool_list(cluster, buf, buf_sz);
     if (ret != buf_sz)
     {
         return -1;
     }
-    const char *b = buf;
-    struct rados_pool_t * pool_ptr;
+
+    buf_ptr = buf;
     while (1){
-        if ('\0' == b[0])
+        if ('\0' == buf_ptr[0])
             break;
         pool_ptr = (struct rados_pool_t *) malloc(sizeof(struct rados_pool_t));
-        pool_ptr->p_name = (char *) malloc(sizeof(b));
-        strcpy(pool_ptr->p_name, b);
+        pool_ptr->p_name = (char *) malloc(sizeof(buf_ptr));
+        strcpy(pool_ptr->p_name, buf_ptr);
         cluster_pool.c_num_pools++;
         list_add_head(&pool_ptr->p_list, &cluster_pool.c_pools_list);
 
-        b += strlen(b) + 1;
+        buf_ptr += strlen(buf_ptr) + 1;
     }
 
-    if (cluster_pool.c_num_pools)
-        cluster_pool.c_has_initialized = 1;
+//    if (cluster_pool.c_num_pools)
+//        cluster_pool.c_has_initialized = 1;
 
-    struct rados_pool_t *p;
-    list_for_each_entry(p, &cluster_pool.c_pools_list, p_list)
-        printf("'%s' \t", p->p_name);
+//    struct rados_pool_t *p;
+//    list_for_each_entry(p, &cluster_pool.c_pools_list, p_list)
+//        printf("'%s' \t", p->p_name);
 
     return 0;
 }
@@ -100,8 +110,18 @@ static void init_pools_ioctx()
        if (ret < 0)
        {
            DBG("create pool io context fail %s", p->p_name);
+           goto error;
        }
+       p->ioctx_initialized = 1;
     }
+    cluster_pool.c_has_initialized = 1;
+
+    return;
+
+error:
+    destroy_ioctxs(&cluster_pool.c_pools_list);
+
+    return;
 }
 
 int ceph_init(void)
@@ -343,8 +363,36 @@ static void parse_json_format()
     }
 }
 
+static void update_elements()
+{
+    struct rados_pool_t * pool_ptr = NULL;
+    const char *pool_name;
+    struct element *e_ptr;
+
+    if (!grp)
+        grp = group_lookup("ceph-pools", 1);
+    if (!grp)
+        exit(1);
+
+    list_for_each_entry(pool_ptr, &cluster_pool.c_pools_list, p_list)
+    {
+        pool_name = pool_ptr->p_name;
+        e_ptr = element_lookup(grp, pool_name, 1);
+        e_ptr->e_num_used_kb = pool_ptr->p_pool_info.num_used_kb;
+        e_ptr->e_num_objects  = pool_ptr->p_pool_info.num_objects;
+        e_ptr->e_num_object_clones = pool_ptr->p_pool_info.num_object_clones;
+        e_ptr->e_num_object_copies = pool_ptr->p_pool_info.num_object_copies;
+        e_ptr->e_num_rd = pool_ptr->p_pool_info.num_rd;
+        e_ptr->e_num_rd_kb = pool_ptr->p_pool_info.num_rd_kb;
+        e_ptr->e_num_wr = pool_ptr->p_pool_info.num_wr;
+        e_ptr->e_num_wr_kb = pool_ptr->p_pool_info.num_wr_kb;
+    }
+}
+
 static int transform()
-{}
+{
+    update_elements();
+}
 
 int read_info()
 {
@@ -353,7 +401,7 @@ int read_info()
         DBG("don't found any command");
         return -1;
     }
-
+    read_pools_stat();
     check_command();
     submit_commands();
     parse_json_format();
@@ -367,9 +415,6 @@ int read_info()
 }
 
 static void parse_json()
-{}
-
-static void update_elements()
 {}
 
 static void free_json_space()

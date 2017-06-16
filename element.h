@@ -100,5 +100,6 @@ struct global_info_t {
 };
 
 extern struct global_info_t * get_global_info(void);
+extern struct element *element_lookup(struct element_group *group, const char *name, int flags);
 
 #endif

@@ -76,6 +76,8 @@ struct pool_info_t {
 
 struct rados_pool_t {
     char * p_name;
+
+    int ioctx_initialized;
     rados_ioctx_t p_ioctx;
 
     struct pool_info_t p_pool_info;

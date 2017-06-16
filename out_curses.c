@@ -10,8 +10,8 @@
 #include "group.h"
 #include "element.h"
 
-#define LIST_COL_1 20
-#define LIST_COL_2 60
+#define LIST_COL_1 25
+#define LIST_COL_2 65
 
 static int row;
 static int rows, cols;
@@ -172,14 +172,14 @@ static void draw_element(struct element_group *g, struct element *e, void *arg)
 
     if (line_visible(*line)) {
         NEXT_ROW();
-        put_line("  %10", e->e_name);
+        put_line("  %10s", e->e_name);
         mvaddch(row, LIST_COL_1, ACS_VLINE);
 
-        put_line("  %-15d%15d", e->e_num_used_kb,
+        put_line("  %-15ld%15ld", e->e_num_used_kb,
                 e->e_num_objects);
 
         mvaddch(row, LIST_COL_2, ACS_VLINE);
-        put_line("  %-10s%-10s %10s%10s",
+        put_line("  %-10ld%10ld %10ld%10ld",
                 e->e_num_rd,
                 e->e_num_rd_kb,
                 e->e_num_wr,
@@ -193,7 +193,7 @@ static void draw_element(struct element_group *g, struct element *e, void *arg)
 //
 //        put_line("%-30.30%", pad);
 
-        draw_attr();
+ //       draw_attr();
     }
 }
 

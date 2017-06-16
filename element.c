@@ -8,6 +8,9 @@
 #include "config.h"
 #include "list.h"
 #include "element.h"
+#include "group.h"
+#include "guard.h"
+#include "utils.h"
 
 static struct global_info_t global_info;
 
@@ -24,6 +27,44 @@ struct global_info_t * get_global_info()
 struct global_mon_t *get_global_mons()
 {
     return &global_mon;
+}
+
+static struct element *__lookup_element(struct element_group *group, const char *name)
+{
+    struct list_head *list;
+    struct element *e;
+
+    list = &group->g_elements;
+
+    list_for_each_entry(e, list, e_list)
+        if (!strcmp(name, e->e_name))
+            return e;
+
+    return NULL;
+}
+
+struct element *element_lookup(struct element_group *group, const char *name, int flags)
+{
+    struct element *e;
+
+    if (!group)
+        BUG();
+    if (e = __lookup_element(group, name))
+        return e;
+
+    DBG("Create element %s", name);
+
+    e = xcalloc(1, sizeof(*e));
+
+    e->e_name = strdup(name);
+    e->e_group = group;
+    init_list_head(&e->e_attrs);
+
+    list_add_tail(&e->e_list, &group->g_elements);
+
+    group->g_nelements++;
+
+    return e;
 }
 
 static void __attribute__  ((constructor)) bind_global_mons()
