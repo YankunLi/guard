@@ -32,7 +32,7 @@ struct cmd_result_t {
     char * c_status;
     size_t c_json_len, c_status_len;
 
-    cJSON * c_object;
+    cJSON * c_root_object;
     struct list_head c_list;
 };
 

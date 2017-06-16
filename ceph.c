@@ -20,7 +20,7 @@ static char * c_path = "/etc/ceph/ceph.conf";
 
 static struct element_group *grp = NULL;
 
-static struct global_info_t *g_info_ptr = NULL;
+static struct global_info_t *global_info = NULL;
 
 static struct ceph_cmds_t ceph_cmds =
 {
@@ -263,7 +263,7 @@ static void prepare_cmds()
 
         result->c_json = NULL;
         result->c_status = NULL;
-        result->c_object = NULL;
+        result->c_root_object = NULL;
         result->c_name = cmd->c_name;
         cmd->c_result_ptr = result;
 
@@ -351,10 +351,10 @@ static void guard_buf_free()
             cmd_ret->c_status = NULL;
         }
 
-        if (cmd_ret->c_object)
+        if (cmd_ret->c_root_object)
         {
-            cJSON_Delete(cmd_ret->c_object);
-            cmd_ret->c_object = NULL;
+            cJSON_Delete(cmd_ret->c_root_object);
+            cmd_ret->c_root_object = NULL;
         }
     }
 }
@@ -366,7 +366,7 @@ static void parse_json_format()
     {
         if (!cmd_ret->c_json)
             return;
-        cmd_ret->c_object = cJSON_Parse(cmd_ret->c_json);
+        cmd_ret->c_root_object = cJSON_Parse(cmd_ret->c_json);
     }
 }
 
@@ -409,21 +409,45 @@ static struct cmd_result_t *cmd_result_lookup(struct cmds_result_t *results, con
     return NULL;
 }
 
-static void update_global_info(void)
+#define IS_NULL_OBJ(obj) if (!obj) \
+{    \
+    BUG(); \
+}
+
+static void update_global_info(struct global_info_t *g_info, struct cmds_result_t *results)
 {
     struct cmd_result_t *ret_ptr;
+    cJSON *temp = NULL;
 
-    if (!g_info_ptr)
-        g_info_ptr = get_global_info();
+    ret_ptr = cmd_result_lookup(results, "ceph_status");
 
-    ret_ptr = cmd_result_lookup(&cmds_result, "ceph_status");
+    temp = cJSON_GetObjectItem(ret_ptr->c_root_object, "fsid");
+    if (!temp)
+    {
+        DBG("Cann't found item fisd");
+        BUG();
+    }
 
+    strcpy(g_info->g_fsid, temp->valuestring);
+
+    //get root health
+    temp = cJSON_GetObjectItem(ret_ptr->c_root_object, "health");
+    IS_NULL_OBJ(temp);
+
+    //get overall_status
+    temp = cJSON_GetObjectItem(temp, "overall_status");
+    IS_NULL_OBJ(temp);
+    strcpy(g_info->g_status, temp->valuestring);
+
+    return;
 }
 
 static int transform()
 {
-    if (!g_info_ptr)
-        g_info_ptr = get_global_info();
+    if (!global_info)
+        global_info = get_global_info();
+
+    update_global_info(global_info, &cmds_result);
 
     update_elements();
 }
