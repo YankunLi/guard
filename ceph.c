@@ -414,14 +414,35 @@ static struct cmd_result_t *cmd_result_lookup(struct cmds_result_t *results, con
     BUG(); \
 }
 
+static int get_int_value(cJSON *root, const char *sub_key)
+{
+    cJSON *sub = cJSON_GetObjectItem(root, sub_key);
+    IS_NULL_OBJ(sub);
+
+    return sub->valueint;
+}
+
+static char * get_string_value(cJSON *root, const char *sub_key)
+{
+    cJSON *sub = cJSON_GetObjectItem(root, sub_key);
+    IS_NULL_OBJ(sub);
+
+    return sub->valuestring;
+}
+
 static void update_global_info(struct global_info_t *g_info, struct cmds_result_t *results)
 {
     struct cmd_result_t *ret_ptr;
+    cJSON *root_obj = NULL;
     cJSON *temp = NULL;
+    cJSON *sub_temp = NULL;
+    struct global_osdmap_t *osdmap = NULL;
 
     ret_ptr = cmd_result_lookup(results, "ceph_status");
+    root_obj = ret_ptr->c_root_object;
 
-    temp = cJSON_GetObjectItem(ret_ptr->c_root_object, "fsid");
+    //get fsid
+    temp = cJSON_GetObjectItem(root_obj, "fsid");
     if (!temp)
     {
         DBG("Cann't found item fisd");
@@ -438,6 +459,30 @@ static void update_global_info(struct global_info_t *g_info, struct cmds_result_
     temp = cJSON_GetObjectItem(temp, "overall_status");
     IS_NULL_OBJ(temp);
     strcpy(g_info->g_status, temp->valuestring);
+
+    osdmap = &g_info->g_storage_servers;
+    //get osdmap
+    temp = cJSON_GetObjectItem(root_obj, "osdmap");
+    IS_NULL_OBJ(temp);
+
+    //get osdmap-->osdmap
+    temp = cJSON_GetObjectItem(temp, "osdmap");
+    IS_NULL_OBJ(temp);
+
+    //get item in osdmap
+    sub_temp = cJSON_GetObjectItem(temp, "epoch");
+    IS_NULL_OBJ(sub_temp);
+    osdmap->g_epoch = sub_temp->valueint;
+
+    sub_temp = cJSON_GetObjectItem(temp, "num_osds");
+    IS_NULL_OBJ(sub_temp);
+    osdmap->g_num_osds = sub_temp->valueint;
+
+    osdmap->g_num_up_osds = get_int_value(temp, "num_up_osds");
+    osdmap->g_num_in_osds = get_int_value(temp, "num_in_osds");
+    osdmap->g_full = get_int_value(temp, "full");
+    osdmap->g_nearfull = get_int_value(temp, "nearfull");
+    osdmap->g_num_remapped_pgs = get_int_value(temp, "num_remapped_pgs");
 
     return;
 }
