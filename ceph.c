@@ -20,14 +20,16 @@ static char * c_path = "/etc/ceph/ceph.conf";
 
 static struct element_group *grp = NULL;
 
-static struct ceph_commands_t ceph_commands =
+static struct global_info_t *g_info_ptr = NULL;
+
+static struct ceph_cmds_t ceph_cmds =
 {
     .c_name = "ceph",
     .c_count = 0,
-    .c_commands_list = LIST_SELF(ceph_commands.c_commands_list),
+    .c_cmds_list = LIST_SELF(ceph_cmds.c_cmds_list),
 };
 
-static struct commands_result_t cmds_result =
+static struct cmds_result_t cmds_result =
 {
     .c_name = "ceph",
     .c_count = 0,
@@ -193,7 +195,7 @@ static void read_pools_stat()
         update_pool_stat(p);
 }
 
-static int send_mon_command()
+static int send_mon_cmd()
 {
     int ret = 0;
     char *buf, *st;
@@ -216,7 +218,7 @@ static int send_mon_command()
     rados_buffer_free(st);
 }
 
-int command_osd_tree()
+int cmd_osd_tree()
 {
     int ret = 0;
     char *buf, *st;
@@ -241,25 +243,28 @@ int command_osd_tree()
     return ret;
 }
 
-static void check_command()
+static void check_cmd()
 {}
 
-static void prepare_commands()
+static void prepare_cmds()
 {
     DBG("prepare commands for reading cluster info");
-    struct ceph_command_t * cmd = NULL;
-    struct command_result_t * result = NULL;
-    list_for_each_entry(cmd, &ceph_commands.c_commands_list, c_list)
+    struct ceph_cmd_t * cmd = NULL;
+    struct cmd_result_t * result = NULL;
+
+    list_for_each_entry(cmd, &ceph_cmds.c_cmds_list, c_list)
     {
-        result = (struct command_result_t *) malloc(sizeof(struct command_result_t));
+        result = (struct cmd_result_t *) malloc(sizeof(struct cmd_result_t));
         if (!result)
         {
             DBG("failure of malloc");
             assert("malloc fail" == 0);
         }
+
         result->c_json = NULL;
         result->c_status = NULL;
         result->c_object = NULL;
+        result->c_name = cmd->c_name;
         cmd->c_result_ptr = result;
 
         list_add_tail(&result->c_list, &cmds_result.c_cmd_result_list);
@@ -268,7 +273,9 @@ static void prepare_commands()
 }
 
 static int read_ceph_status()
-{}
+{
+
+}
 
 static int read_ceph_osd_df()
 {}
@@ -277,7 +284,7 @@ static int read_ceph_osd_tree()
 {
 }
 
-static int execute_command(struct ceph_command_t * cmd)
+static int execute_cmd(struct ceph_cmd_t * cmd)
 {
     int ret = 0;
     char **buf = &cmd->c_result_ptr->c_json;
@@ -286,7 +293,7 @@ static int execute_command(struct ceph_command_t * cmd)
     size_t * st_len = &cmd->c_result_ptr->c_status_len;
     DBG("ececute command %s", cmd->c_name);
 
-    ret = rados_mon_command(cluster, (const char **)cmd->c_command, 1, "", 0, buf, buf_len, st, st_len);
+    ret = rados_mon_command(cluster, (const char **)cmd->c_cmd, 1, "", 0, buf, buf_len, st, st_len);
     if (ret < 0)
     {
         DBG("executing command %s fail", cmd->c_name);
@@ -296,10 +303,10 @@ static int execute_command(struct ceph_command_t * cmd)
     return 0;
 }
 
-static void submit_commands()
+static void submit_cmds()
 {
-    struct ceph_command_t * cmd;
-    list_for_each_entry(cmd, &ceph_commands.c_commands_list, c_list)
+    struct ceph_cmd_t * cmd;
+    list_for_each_entry(cmd, &ceph_cmds.c_cmds_list, c_list)
     {
 //        switch (cmd->c_type)
 //        {
@@ -315,7 +322,7 @@ static void submit_commands()
 //            default:
 //                DBG("this command is invalid");
 //        }
-        execute_command(cmd);
+        execute_cmd(cmd);
     }
 }
 
@@ -328,7 +335,7 @@ static void buffer_free(char * buf)
 static void guard_buf_free()
 {
     DBG("free memory");
-    struct command_result_t * cmd_ret;
+    struct cmd_result_t * cmd_ret;
     list_for_each_entry(cmd_ret, &cmds_result.c_cmd_result_list, c_list)
     {
         if (cmd_ret->c_json)
@@ -354,7 +361,7 @@ static void guard_buf_free()
 
 static void parse_json_format()
 {
-    struct command_result_t * cmd_ret;
+    struct cmd_result_t * cmd_ret;
     list_for_each_entry(cmd_ret, &cmds_result.c_cmd_result_list, c_list)
     {
         if (!cmd_ret->c_json)
@@ -389,21 +396,48 @@ static void update_elements()
     }
 }
 
+static struct cmd_result_t *cmd_result_lookup(struct cmds_result_t *results, const char *name)
+{
+    struct cmd_result_t *ret_ptr;
+
+    list_for_each_entry(ret_ptr, &results->c_cmd_result_list, c_list)
+    {
+        if (!strcmp(name, ret_ptr->c_name))
+            return ret_ptr;
+    }
+
+    return NULL;
+}
+
+static void update_global_info(void)
+{
+    struct cmd_result_t *ret_ptr;
+
+    if (!g_info_ptr)
+        g_info_ptr = get_global_info();
+
+    ret_ptr = cmd_result_lookup(&cmds_result, "ceph_status");
+
+}
+
 static int transform()
 {
+    if (!g_info_ptr)
+        g_info_ptr = get_global_info();
+
     update_elements();
 }
 
 int read_info()
 {
-    if (ceph_commands.c_count <= 0)
+    if (ceph_cmds.c_count <= 0)
     {
         DBG("don't found any command");
         return -1;
     }
     read_pools_stat();
-    check_command();
-    submit_commands();
+    check_cmd();
+    submit_cmds();
     parse_json_format();
     transform();
 
@@ -420,35 +454,35 @@ static void parse_json()
 static void free_json_space()
 {}
 
-static struct  ceph_command_t ceph_status =
+static struct  ceph_cmd_t ceph_status =
 {
-    .c_name = "ceph status",
+    .c_name = "ceph_status",
     .c_type = CEPH_STATUS,
-    .c_command = {"{\"prefix\": \"status\", \"format\": \"json\"}", NULL},
+    .c_cmd = {"{\"prefix\": \"status\", \"format\": \"json\"}", NULL},
     .c_result_ptr = NULL,
 };
 
-static struct ceph_command_t ceph_osd_df =
+static struct ceph_cmd_t ceph_osd_df =
 {
-    .c_name = "ceph osd df",
+    .c_name = "ceph_osd_df",
     .c_type = CEPH_OSD_DF,
-    .c_command = {"{\"prefix\":\"osd df\", \"format\": \"json\"}", NULL},
+    .c_cmd = {"{\"prefix\":\"osd df\", \"format\": \"json\"}", NULL},
     .c_result_ptr = NULL,
 };
 
-static struct ceph_command_t ceph_osd_tree =
+static struct ceph_cmd_t ceph_osd_tree =
 {
-    .c_name = "ceph osd tree",
+    .c_name = "ceph_osd_tree",
     .c_type = CEPH_OSD_TREE,
-    .c_command = {"{\"prefix\":\"status\", \"format\": \"json\"}", NULL},
+    .c_cmd = {"{\"prefix\":\"status\", \"format\": \"json\"}", NULL},
     .c_result_ptr = NULL,
 };
 
-static struct ceph_command_t ceph_osd_perf =
+static struct ceph_cmd_t ceph_osd_perf =
 {
-    .c_name = "ceph osd perf",
+    .c_name = "ceph_osd_perf",
     .c_type = CEPH_OSD_PERF,
-    .c_command = {"{\"prefix\":\"osd perf\", \"format\": \"json\"}", NULL},
+    .c_cmd = {"{\"prefix\":\"osd perf\", \"format\": \"json\"}", NULL},
     .c_result_ptr = NULL,
 };
 
@@ -460,41 +494,41 @@ static struct ceph_command_t ceph_osd_perf =
 //    .c_result_ptr = NULL,
 //};
 
-static int add_command(struct ceph_command_t * cmd)
+static int add_cmd(struct ceph_cmd_t * cmd)
 {
     if (!cmd)
         return -EBUSY;
 
-    DBG("add command %s into ceph_cmds %s", cmd->c_name, ceph_commands.c_name);
-    list_add_tail(&cmd->c_list, &ceph_commands.c_commands_list);
-    ceph_commands.c_count++;
+    DBG("add command %s into ceph_cmds %s", cmd->c_name, ceph_cmds.c_name);
+    list_add_tail(&cmd->c_list, &ceph_cmds.c_cmds_list);
+    ceph_cmds.c_count++;
 
     return 0;
 }
 
-static int commands_register()
+static int cmds_register()
 {
  //   DBG("add command %s into ceph_cmds %s", cmd.c_name, ceph_cmds.c_name);
-    add_command(&ceph_status);
-    add_command(&ceph_osd_df);
-    add_command(&ceph_osd_tree);
-    add_command(&ceph_osd_perf);
+    add_cmd(&ceph_status);
+    add_cmd(&ceph_osd_df);
+    add_cmd(&ceph_osd_tree);
+    add_cmd(&ceph_osd_perf);
 
     return 0;
 }
 
-static void __attribute__ ((constructor)) __init_ceph_commands(void)
+static void __attribute__ ((constructor)) __init_ceph_cmds(void)
 {
-    DBG("init commands, add command to %s", ceph_commands.c_name);
+    DBG("init commands, add command to %s", ceph_cmds.c_name);
     int ret = 0;
-    ret = commands_register();
+    ret = cmds_register();
     if (ret < 0)
     {
-        DBG("don't found ceph commands %s", ceph_commands.c_name);
+        DBG("don't found ceph commands %s", ceph_cmds.c_name);
         assert("fail" == 0);
     }
 
-    prepare_commands();
+    prepare_cmds();
 }
 
 void destroy_handle(void)

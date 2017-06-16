@@ -24,8 +24,10 @@
 
 #define CEPH_OSD_METADATA  104
 
-struct command_result_t {
+struct cmd_result_t {
+    char * c_name;
     int c_type;
+
     char * c_json;
     char * c_status;
     size_t c_json_len, c_status_len;
@@ -34,26 +36,26 @@ struct command_result_t {
     struct list_head c_list;
 };
 
-struct ceph_command_t {
+struct ceph_cmd_t {
     char * c_name;
     int c_type;
-    char * c_command[2];
+    char * c_cmd[2];
     struct list_head c_list;
 
-    struct command_result_t * c_result_ptr;
+    struct cmd_result_t * c_result_ptr;
 };
 
-struct ceph_commands_t {
+struct ceph_cmds_t {
     char * c_name;
 
     uint16_t c_count;
-    struct list_head c_commands_list;
+    struct list_head c_cmds_list;
 
     struct list_head c_list;
 
 };
 
-struct commands_result_t {
+struct cmds_result_t {
     char * c_name;
 
     uint16_t c_count;
