@@ -415,12 +415,12 @@ static struct cmd_result_t *cmd_result_lookup(struct cmds_result_t *results, con
     BUG(); \
 }
 
-static int get_int_value(cJSON *root, const char *sub_key)
+static uint64_t get_int_value(cJSON *root, const char *sub_key)
 {
     cJSON *sub = cJSON_GetObjectItem(root, sub_key);
     IS_NULL_OBJ(sub);
 
-    return sub->valueint;
+    return sub->valuedouble;
 }
 
 static char * get_string_value(cJSON *root, const char *sub_key)
@@ -429,6 +429,32 @@ static char * get_string_value(cJSON *root, const char *sub_key)
     IS_NULL_OBJ(sub);
 
     return sub->valuestring;
+}
+
+static void update_global_usage_info(struct global_usage_t *g_usage, cJSON *root)
+{
+    cJSON *temp = NULL;
+    struct global_usage_t * g_usage_ptr = NULL;
+
+    if (!g_usage || !root)
+        BUG();
+
+    g_usage_ptr = g_usage;
+
+    temp = cJSON_GetObjectItem(root, "pgmap");
+    if (temp == NULL)
+        BUG();
+
+    g_usage_ptr->num_pgs = get_int_value(temp, "num_pgs");
+    g_usage_ptr->data_bytes = get_int_value(temp, "data_bytes");
+    g_usage_ptr->bytes_used = get_int_value(temp, "bytes_used");
+    g_usage_ptr->bytes_avail = get_int_value(temp, "bytes_avail");
+    g_usage_ptr->bytes_total = get_int_value(temp, "bytes_total");
+    g_usage_ptr->usage_rate.read_bytes_sec = get_int_value(temp, "read_bytes_sec");
+    g_usage_ptr->usage_rate.write_bytes_sec = get_int_value(temp, "write_bytes_sec");
+    g_usage_ptr->usage_rate.op_per_sec = get_int_value(temp, "op_per_sec");
+
+    return;
 }
 
 static void update_global_mon_info(struct global_mon_t *g_mons, cJSON *root)
@@ -511,6 +537,7 @@ static void update_global_info(struct global_info_t *g_info, struct cmds_result_
     cJSON *sub_temp = NULL;
     struct global_osdmap_t *osdmap = NULL;
     struct global_mon_t *g_mons;
+    struct global_usage_t *usage_ptr;
 
     int item_count = 0;
     int index = 0;
@@ -562,9 +589,14 @@ static void update_global_info(struct global_info_t *g_info, struct cmds_result_
     osdmap->g_nearfull = get_int_value(temp, "nearfull");
     osdmap->g_num_remapped_pgs = get_int_value(temp, "num_remapped_pgs");
 
+    //get monitor information
     g_mons = g_info->g_mon_servers;
     if (g_mons)
         update_global_mon_info(g_mons, root_obj);
+
+    //get resource usage
+    usage_ptr = &g_info->g_usage;
+    update_global_usage_info(usage_ptr, root_obj);
 
     return;
 }
