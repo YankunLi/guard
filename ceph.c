@@ -10,6 +10,7 @@
 #include "guard.h"
 #include "group.h"
 #include "element.h"
+#include "utils.h"
 
 static rados_t cluster;
 static int cluster_initialized = 0;
@@ -430,6 +431,97 @@ static char * get_string_value(cJSON *root, const char *sub_key)
     return sub->valuestring;
 }
 
+static struct mon_t * mon_lookup(struct global_mon_t *global_mons, const char *name)
+{
+    struct mon_t *mon_ptr;
+    list_for_each_entry(mon_ptr, &global_mons->g_mons, m_list)
+    {
+        if (!strcmp(mon_ptr->m_name, name))
+            return mon_ptr;
+    }
+
+    mon_ptr = (struct mon_t *)xcalloc(1, sizeof(struct mon_t));
+
+    global_mons->g_mon_size++;
+    strcpy(mon_ptr->m_name, name);
+    list_add_tail(&mon_ptr->m_list, &global_mons->g_mons);
+
+    return mon_ptr;
+}
+
+static void update_global_mon_info(struct global_info_t *g_info, cJSON *root)
+{
+    struct global_mon_t *global_mons = get_global_mons();
+    cJSON *temp = NULL;
+    cJSON *sub_temp = NULL, *sub_temp_n = NULL;
+    char name[40];
+
+    int item_count = 0, item_count1;
+    int index = 0, index1 = 0;
+
+    struct mon_t * mon_ptr;
+
+    char * json_step[] = {"health", "health", "health_services"};
+
+    g_info->g_mon_servers = global_mons;
+    //update mons information
+    if (!global_mons->g_mon_size)
+    {
+        init_list_head(&global_mons->g_mons);
+    }
+
+    temp = cJSON_GetObjectItem(root, "monmap");
+    IS_NULL_OBJ(temp);
+    temp = cJSON_GetObjectItem(temp, "mons");
+    IS_NULL_OBJ(temp);
+
+    item_count = cJSON_GetArraySize(temp);
+    for (index = 0; index < item_count; index++)
+    {
+        sub_temp = cJSON_GetArrayItem(temp, index);
+        strcpy(name, get_string_value(sub_temp, "name"));
+
+        mon_ptr = mon_lookup(global_mons, name);
+
+        mon_ptr->m_rank = get_int_value(sub_temp, "rank");
+        strcpy(mon_ptr->m_addr, get_string_value(sub_temp, "addr"));
+
+    }
+
+    temp = root;
+    for (index = 0; index < 3; index++)
+    {
+        temp = cJSON_GetObjectItem(temp, json_step[index]);
+        if (temp == NULL)
+            exit(1);
+    }
+
+    item_count = cJSON_GetArraySize(temp);
+
+    for (index = 0; index < item_count; index++)
+    {
+        sub_temp = cJSON_GetArrayItem(temp, index);
+        sub_temp = cJSON_GetObjectItem(sub_temp, "mons");
+        if (sub_temp == NULL)
+            BUG();
+
+        item_count1 = cJSON_GetArraySize(sub_temp);
+        for (index1 = 0; index1 < item_count1; index1++)
+        {
+            sub_temp_n = cJSON_GetArrayItem(sub_temp, index1);
+            mon_ptr = mon_lookup(global_mons, get_string_value(sub_temp_n, "name"));
+
+            mon_ptr->m_kb_total = get_int_value(sub_temp_n, "kb_total");
+            mon_ptr->m_kb_used = get_int_value(sub_temp_n, "kb_used");
+            mon_ptr->m_kb_avail = get_int_value(sub_temp_n, "kb_avail");
+            mon_ptr->m_avail_percent = get_int_value(sub_temp_n, "avail_percent");
+            strcpy(mon_ptr->m_health, get_string_value(sub_temp_n, "health"));
+        }
+
+    }
+
+}
+
 static void update_global_info(struct global_info_t *g_info, struct cmds_result_t *results)
 {
     struct cmd_result_t *ret_ptr;
@@ -437,6 +529,10 @@ static void update_global_info(struct global_info_t *g_info, struct cmds_result_
     cJSON *temp = NULL;
     cJSON *sub_temp = NULL;
     struct global_osdmap_t *osdmap = NULL;
+
+    int item_count = 0;
+    int index = 0;
+
 
     ret_ptr = cmd_result_lookup(results, "ceph_status");
     root_obj = ret_ptr->c_root_object;
@@ -483,6 +579,8 @@ static void update_global_info(struct global_info_t *g_info, struct cmds_result_
     osdmap->g_full = get_int_value(temp, "full");
     osdmap->g_nearfull = get_int_value(temp, "nearfull");
     osdmap->g_num_remapped_pgs = get_int_value(temp, "num_remapped_pgs");
+
+    update_global_mon_info(g_info, root_obj);
 
     return;
 }
