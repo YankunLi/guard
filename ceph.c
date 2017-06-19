@@ -451,7 +451,7 @@ static struct mon_t * mon_lookup(struct global_mon_t *global_mons, const char *n
 
 static void update_global_mon_info(struct global_info_t *g_info, cJSON *root)
 {
-    struct global_mon_t *global_mons = get_global_mons();
+    struct global_mon_t *global_mons;
     cJSON *temp = NULL;
     cJSON *sub_temp = NULL, *sub_temp_n = NULL;
     char name[40];
@@ -463,7 +463,7 @@ static void update_global_mon_info(struct global_info_t *g_info, cJSON *root)
 
     char * json_step[] = {"health", "health", "health_services"};
 
-    g_info->g_mon_servers = global_mons;
+    global_mons = g_info->g_mon_servers;
     //update mons information
     if (!global_mons->g_mon_size)
     {
