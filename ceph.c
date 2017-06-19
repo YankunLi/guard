@@ -431,24 +431,6 @@ static char * get_string_value(cJSON *root, const char *sub_key)
     return sub->valuestring;
 }
 
-static struct mon_t * mon_lookup(struct global_mon_t *global_mons, const char *name)
-{
-    struct mon_t *mon_ptr;
-    list_for_each_entry(mon_ptr, &global_mons->g_mons, m_list)
-    {
-        if (!strcmp(mon_ptr->m_name, name))
-            return mon_ptr;
-    }
-
-    mon_ptr = (struct mon_t *)xcalloc(1, sizeof(struct mon_t));
-
-    global_mons->g_mon_size++;
-    strcpy(mon_ptr->m_name, name);
-    list_add_tail(&mon_ptr->m_list, &global_mons->g_mons);
-
-    return mon_ptr;
-}
-
 static void update_global_mon_info(struct global_mon_t *g_mons, cJSON *root)
 {
     struct global_mon_t *global_mons = g_mons;

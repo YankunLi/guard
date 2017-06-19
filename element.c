@@ -67,6 +67,24 @@ struct element *element_lookup(struct element_group *group, const char *name, in
     return e;
 }
 
+struct mon_t * mon_lookup(struct global_mon_t *global_mons, const char *name)
+{
+    struct mon_t *mon_ptr;
+    list_for_each_entry(mon_ptr, &global_mons->g_mons, m_list)
+    {
+        if (!strcmp(mon_ptr->m_name, name))
+            return mon_ptr;
+    }
+
+    mon_ptr = (struct mon_t *)xcalloc(1, sizeof(struct mon_t));
+
+    global_mons->g_mon_size++;
+    strcpy(mon_ptr->m_name, name);
+    list_add_tail(&mon_ptr->m_list, &global_mons->g_mons);
+
+    return mon_ptr;
+}
+
 static void __attribute__  ((constructor)) bind_global_mons()
 {
     int count = 3;
