@@ -144,6 +144,6 @@ struct rados_osds_t {
 
 extern int read_info();
 extern int ceph_init();
-extern void destroy_handle();
+extern void close_cluster();
 
 #endif

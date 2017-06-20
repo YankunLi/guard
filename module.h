@@ -55,5 +55,6 @@ extern void module_register_subsys(struct guard_subsys *);
 extern void module_foreach_run_enabled(struct guard_subsys *);
 extern void module_foreach_run_enabled_pre(struct guard_subsys *);
 extern void module_foreach_run_enabled_post(struct guard_subsys *);
+extern void module_shutdown(void);
 
 #endif

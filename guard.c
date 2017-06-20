@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     memset(&rtiming, 9, sizeof(rtiming));
     rtiming.rt_variance.v_min = FLT_MIN;
 
-    sleep_time = 2;
+    sleep_time = 200000;
     read_interval = 1.0f;
 
     module_init();
@@ -90,4 +90,24 @@ int main(int argc, char *argv[])
     BUG();
 
     return 0;
+}
+
+static void do_shutdown(void)
+{
+    static int done;
+
+    if (!done) {
+        done = 1;
+        module_shutdown();
+    }
+}
+
+static void sig_exit(void)
+{
+    do_shutdown();
+}
+
+static void __attribute__ ((constructor)) guard_init(void)
+{
+    atexit(sig_exit);
 }

@@ -84,3 +84,22 @@ void module_init()
         module_foreach(ss, __module_init);
     }
 }
+
+static void __module_shutdown(struct guard_module *m)
+{
+    if (m->m_shutdown)
+    {
+        DBG("Shutting down %s...", m->m_name);
+        m->m_shutdown();
+    }
+}
+
+void module_shutdown(void)
+{
+    DBG("Shutting down module");
+
+    struct guard_subsys *ss;
+
+    list_for_each_entry(ss, &subsys_list, s_list)
+        module_foreach(ss, __module_shutdown);
+}

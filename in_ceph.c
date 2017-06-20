@@ -15,6 +15,7 @@
 #include "group.h"
 
 static struct guard_module ceph_ops;
+static int initilized;
 
 static int ceph_probe(void)
 {
@@ -35,6 +36,8 @@ static int ceph_do_init(void)
         BUG();
     }
 
+    initilized = 1;
+
     return 0;
 }
 
@@ -47,9 +50,22 @@ static void ceph_read(void)
 //    DBG("I am ceph module");
 }
 
+static void close_connection(void)
+{
+    close_cluster();
+}
+
+static void ceph_shutdown(void)
+{
+    if (initilized) {
+        close_connection();
+    }
+}
+
 static struct guard_module ceph_ops = {
     .m_name = "ceph",
     .m_do = ceph_read,
+    .m_shutdown = ceph_shutdown,
     .m_parse_opt = ceph_parse_opt,
     .m_probe = ceph_probe,
     .m_init = ceph_do_init,

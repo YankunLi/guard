@@ -561,9 +561,17 @@ static void update_global_info(struct global_info_t *g_info, struct cmds_result_
     IS_NULL_OBJ(temp);
 
     //get overall_status
-    temp = cJSON_GetObjectItem(temp, "overall_status");
+    /* temp = cJSON_GetObjectItem(temp, "overall_status"); */
+    temp = cJSON_GetObjectItem(temp, "summary");
+    temp = cJSON_GetArrayItem(temp, 0);
+    sub_temp = cJSON_GetObjectItem(temp, "severity");
+
     IS_NULL_OBJ(temp);
-    strcpy(g_info->g_status, temp->valuestring);
+    strcpy(g_info->g_status, sub_temp->valuestring);
+
+    sub_temp = cJSON_GetObjectItem(temp, "summary");
+
+    strcpy(g_info->g_summary, sub_temp->valuestring);
 
     osdmap = &g_info->g_storage_servers;
     //get osdmap
@@ -714,8 +722,20 @@ static void __attribute__ ((constructor)) __init_ceph_cmds(void)
     prepare_cmds();
 }
 
-void destroy_handle(void)
+void close_connection(void)
 {
     if (cluster_initialized)
         rados_shutdown(cluster);
+}
+
+void close_cluster(void)
+{
+    if (cluster_initialized)
+    {
+        destroy_ioctxs(&cluster_pool.c_pools_list);
+        close_connection();
+    }
+
+    //free memory
+
 }

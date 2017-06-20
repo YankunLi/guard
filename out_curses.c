@@ -11,7 +11,7 @@
 #include "element.h"
 
 #define LIST_COL_1 25
-#define LIST_COL_2 65
+#define LIST_COL_2 60
 
 static int row;
 static int rows, cols;
@@ -89,6 +89,7 @@ static int handle_input(int ch)
             return 1;
 
         case 'c':
+            exit(0);
             clear();
             return 1;
     }
@@ -96,7 +97,10 @@ static int handle_input(int ch)
 }
 
 static void curses_shutdown()
-{}
+{
+    if (initialized)
+        endwin();
+}
 
 static void put_line(const char *fmt, ...)
 {
@@ -139,17 +143,17 @@ static inline int line_visible(int line)
 static void draw_header(void)
 {
     attrset(COLOR_PAIR(1) | A_REVERSE);
-    char *pad = xcalloc(1, cols);
+//    char *pad = xcalloc(1, cols);
 //    move(row, 0);
-    memset(pad, ' ', sizeof(pad));
-    put_line("%s", pad);
+//    memset(pad, ' ', sizeof(pad));
+//    put_line("%s", pad);
     move(row, 0);
-    put_line("%s %c%s%c", "curses", '(', "", ')');
+    put_line("%s %c%s%c", " @_@");
 
     move(row, COLS - strlen("guard 1.0") - 1);
     put_line("%s", "guard 1.0");
     attrset(A_NORMAL);
-    xfree(pad);
+//    xfree(pad);
     move(row, 0);
 }
 
@@ -175,11 +179,11 @@ static void draw_element(struct element_group *g, struct element *e, void *arg)
         put_line("  %10s", e->e_name);
         mvaddch(row, LIST_COL_1, ACS_VLINE);
 
-        put_line("  %-15ld%15ld", e->e_num_used_kb,
+        put_line("  %-15ld%-15ld", e->e_num_used_kb,
                 e->e_num_objects);
 
         mvaddch(row, LIST_COL_2, ACS_VLINE);
-        put_line("  %-10ld%10ld %10ld%10ld",
+        put_line("  %-15ld%-15ld %-15ld%-15ld",
                 e->e_num_rd,
                 e->e_num_rd_kb,
                 e->e_num_wr,
@@ -212,8 +216,11 @@ static void __draw_global_mon(struct mon_t *mon, int interval)
     mvprintw(row, interval/2 - 28, "%10s%24s%6d%18s",
             mon->m_name, mon->m_addr, mon->m_rank, mon->m_health);
     mvaddch(row,  interval * 1, ACS_VLINE);
-    mvprintw(row, interval + interval/2 - 28, "%10d    %10d    %10d    %10d",
-            mon->m_kb_total, mon->m_kb_used, mon->m_kb_avail, mon->m_avail_percent);
+    mvprintw(row, interval + interval/2 - 28, "%10d    %10d    %10d    %10d%%",
+            mon->m_kb_total/(1 << 20) ? mon->m_kb_total/(1 << 20) : mon->m_kb_total,
+            mon->m_kb_used/(1 << 20) ? mon->m_kb_used/(1 << 20) : mon->m_kb_used,
+            mon->m_kb_avail/(1 << 20) ? mon->m_kb_avail/(1 << 20) : mon->m_kb_avail,
+            mon->m_avail_percent);
 }
 
 static void draw_global_mon()
@@ -393,14 +400,14 @@ static void draw_group(struct element_group *g, void *arg)
         attroff(A_BOLD);
         mvaddch(row, LIST_COL_1, ACS_VLINE);
         attron(A_BOLD);
-        put_line("  %-15s%15s",
+        put_line("  %-15s%-15s",
                 g->g_hdr->gh_column[0],
                 g->g_hdr->gh_column[1]);
 
         attroff(A_BOLD);
         mvaddch(row, LIST_COL_2, ACS_VLINE);
         attron(A_BOLD);
-        put_line("  %-10s%-10s %10s%10s",
+        put_line("  %-15s%-15s %-15s%-15s",
                 g->g_hdr->gh_column[4],
                 g->g_hdr->gh_column[5],
                 g->g_hdr->gh_column[6],
@@ -441,6 +448,7 @@ static void draw_statusbar(void)
     char s[27];
     time_t t = time(NULL);
 
+    attrset(COLOR_PAIR(2) | A_REVERSE);
     asctime_r(localtime(&t), s);
     s[strlen(s) - 1] = '\0';
 
@@ -451,6 +459,7 @@ static void draw_statusbar(void)
     move(row, COLS - strlen(help_text) - 1);
     put_line("%s", help_text);
 
+    attrset(A_NORMAL);
     move(row, 0);
 }
 
@@ -502,7 +511,7 @@ static int curses_init()
     if (c_use_color) {
         start_color();
         init_pair(1, COLOR_BLUE, COLOR_WHITE);
-        init_pair(2, COLOR_WHITE, COLOR_BLUE);
+        init_pair(2, COLOR_CYAN, COLOR_BLUE);
     }
 
     keypad(stdscr, TRUE);
