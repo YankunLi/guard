@@ -24,6 +24,9 @@ static struct global_info_t *global_info = NULL;
 
 static int c_disable_global_info = 0;
 
+static int print_help = 0;
+static int quit_mode = 0;
+
 static uint64_t scale[7] = {
     1, // B
     1 << 10, //1024  1024 KB
@@ -80,17 +83,83 @@ out:
     return;
 }
 
+static void draw_help(void)
+{
+    attrset(COLOR_PAIR(2) | A_REVERSE);
+#define HW 35
+#define HH 10
+    int i, y = (rows/2) - (HH/2);
+    int x = (cols/2) - (HW/2);
+    char pad[HW+1];
+
+    memset(pad, ' ', sizeof(pad));
+    pad[sizeof(pad) - 1] = '\0';
+
+    attron(A_STANDOUT);
+
+    for (i = 0; i < HH; i++)
+        mvaddnstr(y + i, x, pad, -1);
+
+    mvaddch(y - 1, x - 1, ACS_ULCORNER);
+    mvaddch(y + HH, x - 1, ACS_LLCORNER);
+
+    mvaddch(y - 1, x + HW, ACS_URCORNER);
+    mvaddch(y + HH, x + HW, ACS_LRCORNER);
+
+    for (i = 0; i < HH; i++) {
+        mvaddch(y + i, x - 1, ACS_VLINE);
+        mvaddch(y + i, x + HW, ACS_VLINE);
+    }
+
+    for (i = 0; i < HW; i++) {
+        mvaddch(y - 1, x + i, ACS_HLINE);
+        mvaddch(y + HH, x + i, ACS_HLINE);
+    }
+
+    attron(A_BOLD);
+    mvaddnstr(y - 1, x + 10, "QUICK REFERENCE", -1);
+    attron(A_UNDERLINE);
+    mvaddnstr(y+ 0, x+1, "Navigation", -1);
+    attroff(A_BOLD | A_UNDERLINE);
+
+    mvaddnstr(y+ 1, x+3, "q       Quit guard", -1);
+    mvaddnstr(y+ 2, x+3, "?       Toggle quick reference", -1);
+
+    attroff(A_STANDOUT);
+    row = y + HH;
+
+
+}
+
 static int handle_input(int ch)
 {
     switch (ch)
     {
+        case 'q':
+            clear();
+            if (print_help)
+                print_help = 0;
+            else
+                quit_mode = quit_mode ? 0 : 1;
+            return 1;
+
         case KEY_CLEAR:
             clear();
             return 1;
 
-        case 'c':
-            exit(0);
+        case 0x1b:
             clear();
+            print_help = 0;
+            return 1;
+
+        case 'y':
+            if (quit_mode)
+                exit(0);
+            break;
+
+        case '?':
+            clear();
+            print_help = print_help ? 0 : 1;
             return 1;
     }
     return 0;
@@ -489,6 +558,11 @@ static void curses_draw()
     draw_context();
 
     draw_statusbar();
+
+ //   if (quit_mode)
+ //       print_message("Really Quit? (y/n)");
+    if (print_help)
+        draw_help();
 
 out:
     attrset(0);
