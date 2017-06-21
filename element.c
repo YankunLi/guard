@@ -134,3 +134,20 @@ static void __attribute__  ((constructor)) bind_global_mons()
 
 
 }
+
+static void __free_mons(struct global_mon_t *mons)
+{
+        list_clear(&mons->g_mons);
+}
+
+
+void free_resource()
+{
+    if (global_mon.g_mon_size)
+        __free_mons(&global_mon);
+}
+
+static void __attribute__ ((destructor)) free_mons(void)
+{
+    DBG("Free mons...");
+}

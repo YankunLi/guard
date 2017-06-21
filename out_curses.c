@@ -171,6 +171,8 @@ static void curses_shutdown()
 {
     if (initialized)
         endwin();
+
+    free_resource();
 }
 
 static void put_line(const char *fmt, ...)
