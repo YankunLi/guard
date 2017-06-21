@@ -532,6 +532,36 @@ static void draw_statusbar(void)
     move(row, 0);
 }
 
+static void print_message(const char *message)
+{
+    int i, y = (rows/2) - 2;
+    int len = strlen(message);
+    int x = (cols/2) - (len/2);
+
+    attrset(A_STANDOUT);
+    mvaddch(y - 2, x - 1, ACS_ULCORNER);
+    mvaddch(y + 2, x - 1, ACS_LLCORNER);
+    mvaddch(y - 2, x + len, ACS_URCORNER);
+    mvaddch(y + 2, x + len, ACS_LRCORNER);
+
+    for (i = 0; i < 3; i++) {
+        mvaddch(y - 1 + i, x + len, ACS_VLINE);
+        mvaddch(y - 1 + i, x - 1 ,ACS_VLINE);
+    }
+
+    for (i = 0; i < len; i++) {
+        mvaddch(y - 2, x + i, ACS_HLINE);
+        mvaddch(y - 1, x + i, ' ');
+        mvaddch(y + 1, x + i, ' ');
+        mvaddch(y + 2, x + i, ACS_HLINE);
+    }
+
+    mvaddstr(y, x, message);
+    attroff(A_STANDOUT);
+
+    row = y + 2;
+}
+
 static void curses_draw()
 {
     static int old_rows_and_cols = 0;
@@ -559,8 +589,8 @@ static void curses_draw()
 
     draw_statusbar();
 
- //   if (quit_mode)
- //       print_message("Really Quit? (y/n)");
+    if (quit_mode)
+        print_message(" Really Quit? (y/n) ");
     if (print_help)
         draw_help();
 
