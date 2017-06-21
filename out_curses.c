@@ -150,6 +150,7 @@ static int handle_input(int ch)
         case 0x1b:
             clear();
             print_help = 0;
+            quit_mode = 0;
             return 1;
 
         case 'y':
