@@ -163,6 +163,7 @@ static int handle_input(int ch)
             print_help = print_help ? 0 : 1;
             return 1;
     }
+
     return 0;
 }
 
