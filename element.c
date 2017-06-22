@@ -69,9 +69,9 @@ struct element *element_lookup(struct element_group *group, const char *name, in
 
 void element_free(struct element *e)
 {
-   // xfree(&e->e_name);
-    //xfree(&e->e_description);
-    //xfree(&e);
+    xfree(&e->e_name);
+    /* xfree(&e->e_description); */
+    xfree(&e);
 }
 
 struct mon_t * mon_lookup(struct global_mon_t *global_mons, const char *name)
