@@ -55,12 +55,13 @@ static void destroy_ioctxs(struct list_head *list)
     struct rados_pool_t *rados_pool;
     list_for_each_entry(rados_pool, list, p_list)
         if (rados_pool->ioctx_initialized)
-        __destroy_ioctx(rados_pool->p_ioctx);
+            __destroy_ioctx(rados_pool->p_ioctx);
 
 }
 
 static int list_pools()
 {
+    char *buf;
     const char *buf_ptr;
     struct rados_pool_t * pool_ptr;
 
@@ -73,7 +74,9 @@ static int list_pools()
         return -1;
     }
 
-    char buf[buf_sz];
+    buf = xcalloc(1, buf_sz);
+    memset(buf, ' ', buf_sz);
+
     int ret = rados_pool_list(cluster, buf, buf_sz);
     if (ret != buf_sz)
     {
@@ -84,8 +87,10 @@ static int list_pools()
     while (1){
         if ('\0' == buf_ptr[0])
             break;
+
         pool_ptr = (struct rados_pool_t *) malloc(sizeof(struct rados_pool_t));
         pool_ptr->p_name = (char *) malloc(sizeof(buf_ptr));
+
         strcpy(pool_ptr->p_name, buf_ptr);
         cluster_pool.c_num_pools++;
         list_add_head(&pool_ptr->p_list, &cluster_pool.c_pools);
@@ -99,6 +104,8 @@ static int list_pools()
 //    struct rados_pool_t *p;
 //    list_for_each_entry(p, &cluster_pool.c_pools, p_list)
 //        printf("'%s' \t", p->p_name);
+
+    xfree(&buf);
 
     return 0;
 }
@@ -272,14 +279,6 @@ static void prepare_cmds()
         cmds_result.c_count++;
     }
 }
-
-static int read_ceph_status()
-{
-
-}
-
-static int read_ceph_osd_df()
-{}
 
 static int read_ceph_osd_tree()
 {
@@ -722,17 +721,18 @@ static void __attribute__ ((constructor)) __init_ceph_cmds(void)
     prepare_cmds();
 }
 
-void close_connection(void)
+static void close_connection(void)
 {
-    if (cluster_initialized)
-        rados_shutdown(cluster);
+    rados_shutdown(cluster);
 }
 
 void close_cluster(void)
 {
     if (cluster_initialized)
     {
-        destroy_ioctxs(&cluster_pool.c_pools);
+        if (cluster_pool.c_has_initialized)
+            destroy_ioctxs(&cluster_pool.c_pools);
+
         close_connection();
     }
 

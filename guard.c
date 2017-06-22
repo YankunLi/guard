@@ -13,7 +13,7 @@
 #include "input.h"
 #include "output.h"
 
-int start_time;
+static int start_time;
 
 static struct reader_timing rtiming;
 
@@ -60,12 +60,8 @@ int main(int argc, char *argv[])
                 timestamp_add(&rtiming.rt_next_read, &e, &ri);
                 timestamp_add(&rtiming.rt_next_read, &rtiming.rt_next_read, &c);
 
-                //process
-               // system("clear");
-               // printf("%s\n", "hello world");
                 input_read();
                 output_draw();
-               // fflush(stdout);
             }
             st = sleep_time;
 

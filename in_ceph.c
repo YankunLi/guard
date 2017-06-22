@@ -30,6 +30,9 @@ static void ceph_parse_opt(const char * type, const char * value)
 static int ceph_do_init(void)
 {
     int ret;
+    if (initilized)
+        return 0;
+
     ret = ceph_init();
     if (0 != ret)
     {
