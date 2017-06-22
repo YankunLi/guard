@@ -27,21 +27,21 @@ static struct ceph_cmds_t ceph_cmds =
 {
     .c_name = "ceph",
     .c_count = 0,
-    .c_cmds_list = LIST_SELF(ceph_cmds.c_cmds_list),
+    .c_cmds = LIST_SELF(ceph_cmds.c_cmds),
 };
 
 static struct cmds_result_t cmds_result =
 {
     .c_name = "ceph",
     .c_count = 0,
-    .c_cmd_result_list = LIST_SELF(cmds_result.c_cmd_result_list),
+    .c_cmd_results = LIST_SELF(cmds_result.c_cmd_results),
 };
 
 struct rados_cluster_pool_t cluster_pool =
 {
     .c_name = "ceph",
     .c_num_pools = 0,
-    .c_pools_list = LIST_SELF(cluster_pool.c_pools_list),
+    .c_pools = LIST_SELF(cluster_pool.c_pools),
     .c_has_initialized = 0,
 };
 
@@ -88,7 +88,7 @@ static int list_pools()
         pool_ptr->p_name = (char *) malloc(sizeof(buf_ptr));
         strcpy(pool_ptr->p_name, buf_ptr);
         cluster_pool.c_num_pools++;
-        list_add_head(&pool_ptr->p_list, &cluster_pool.c_pools_list);
+        list_add_head(&pool_ptr->p_list, &cluster_pool.c_pools);
 
         buf_ptr += strlen(buf_ptr) + 1;
     }
@@ -97,7 +97,7 @@ static int list_pools()
 //        cluster_pool.c_has_initialized = 1;
 
 //    struct rados_pool_t *p;
-//    list_for_each_entry(p, &cluster_pool.c_pools_list, p_list)
+//    list_for_each_entry(p, &cluster_pool.c_pools, p_list)
 //        printf("'%s' \t", p->p_name);
 
     return 0;
@@ -107,7 +107,7 @@ static void init_pools_ioctx()
 {
     int ret = 0;
     struct rados_pool_t *p;
-    list_for_each_entry(p, &cluster_pool.c_pools_list, p_list)
+    list_for_each_entry(p, &cluster_pool.c_pools, p_list)
     {
        ret = rados_ioctx_create(cluster, p->p_name, &p->p_ioctx);
        if (ret < 0)
@@ -122,7 +122,7 @@ static void init_pools_ioctx()
     return;
 
 error:
-    destroy_ioctxs(&cluster_pool.c_pools_list);
+    destroy_ioctxs(&cluster_pool.c_pools);
 
     return;
 }
@@ -192,7 +192,7 @@ static int update_pool_stat(struct rados_pool_t * pool)
 static void read_pools_stat()
 {
     struct rados_pool_t *p;
-    list_for_each_entry(p, &cluster_pool.c_pools_list, p_list)
+    list_for_each_entry(p, &cluster_pool.c_pools, p_list)
         update_pool_stat(p);
 }
 
@@ -253,7 +253,7 @@ static void prepare_cmds()
     struct ceph_cmd_t * cmd = NULL;
     struct cmd_result_t * result = NULL;
 
-    list_for_each_entry(cmd, &ceph_cmds.c_cmds_list, c_list)
+    list_for_each_entry(cmd, &ceph_cmds.c_cmds, c_list)
     {
         result = (struct cmd_result_t *) malloc(sizeof(struct cmd_result_t));
         if (!result)
@@ -268,7 +268,7 @@ static void prepare_cmds()
         result->c_name = cmd->c_name;
         cmd->c_result_ptr = result;
 
-        list_add_tail(&result->c_list, &cmds_result.c_cmd_result_list);
+        list_add_tail(&result->c_list, &cmds_result.c_cmd_results);
         cmds_result.c_count++;
     }
 }
@@ -307,7 +307,7 @@ static int execute_cmd(struct ceph_cmd_t * cmd)
 static void submit_cmds()
 {
     struct ceph_cmd_t * cmd;
-    list_for_each_entry(cmd, &ceph_cmds.c_cmds_list, c_list)
+    list_for_each_entry(cmd, &ceph_cmds.c_cmds, c_list)
     {
 //        switch (cmd->c_type)
 //        {
@@ -337,7 +337,7 @@ static void guard_buf_free()
 {
     DBG("free memory");
     struct cmd_result_t * cmd_ret;
-    list_for_each_entry(cmd_ret, &cmds_result.c_cmd_result_list, c_list)
+    list_for_each_entry(cmd_ret, &cmds_result.c_cmd_results, c_list)
     {
         if (cmd_ret->c_json)
         {
@@ -363,7 +363,7 @@ static void guard_buf_free()
 static void parse_json_format()
 {
     struct cmd_result_t * cmd_ret;
-    list_for_each_entry(cmd_ret, &cmds_result.c_cmd_result_list, c_list)
+    list_for_each_entry(cmd_ret, &cmds_result.c_cmd_results, c_list)
     {
         if (!cmd_ret->c_json)
             return;
@@ -382,7 +382,7 @@ static void update_elements()
     if (!grp)
         exit(1);
 
-    list_for_each_entry(pool_ptr, &cluster_pool.c_pools_list, p_list)
+    list_for_each_entry(pool_ptr, &cluster_pool.c_pools, p_list)
     {
         pool_name = pool_ptr->p_name;
         e_ptr = element_lookup(grp, pool_name, 1);
@@ -401,7 +401,7 @@ static struct cmd_result_t *cmd_result_lookup(struct cmds_result_t *results, con
 {
     struct cmd_result_t *ret_ptr;
 
-    list_for_each_entry(ret_ptr, &results->c_cmd_result_list, c_list)
+    list_for_each_entry(ret_ptr, &results->c_cmd_results, c_list)
     {
         if (!strcmp(name, ret_ptr->c_name))
             return ret_ptr;
@@ -691,7 +691,7 @@ static int add_cmd(struct ceph_cmd_t * cmd)
         return -EBUSY;
 
     DBG("add command %s into ceph_cmds %s", cmd->c_name, ceph_cmds.c_name);
-    list_add_tail(&cmd->c_list, &ceph_cmds.c_cmds_list);
+    list_add_tail(&cmd->c_list, &ceph_cmds.c_cmds);
     ceph_cmds.c_count++;
 
     return 0;
@@ -732,7 +732,7 @@ void close_cluster(void)
 {
     if (cluster_initialized)
     {
-        destroy_ioctxs(&cluster_pool.c_pools_list);
+        destroy_ioctxs(&cluster_pool.c_pools);
         close_connection();
     }
 
@@ -758,9 +758,9 @@ static void __attribute__ ((destructor)) ceph_exit(void)
 
     guard_buf_free();
 
-    list_for_each_entry_safe(p, pn, &cluster_pool.c_pools_list, p_list)
+    list_for_each_entry_safe(p, pn, &cluster_pool.c_pools, p_list)
         pool_free(p);
 
-    list_for_each_entry_safe(re, ren, &cmds_result.c_cmd_result_list, c_list)
+    list_for_each_entry_safe(re, ren, &cmds_result.c_cmd_results, c_list)
         cmd_result_free(re);
 }

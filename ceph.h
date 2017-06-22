@@ -49,7 +49,7 @@ struct ceph_cmds_t {
     char * c_name;
 
     uint16_t c_count;
-    struct list_head c_cmds_list;
+    struct list_head c_cmds;
 
     struct list_head c_list;
 
@@ -59,7 +59,7 @@ struct cmds_result_t {
     char * c_name;
 
     uint16_t c_count;
-    struct list_head c_cmd_result_list;
+    struct list_head c_cmd_results;
 
     struct list_head c_list;
 };
@@ -91,7 +91,7 @@ struct rados_cluster_pool_t {
     char *c_name;
 
     uint16_t c_num_pools;
-    struct list_head c_pools_list;
+    struct list_head c_pools;
 
     int c_has_initialized;
 
@@ -138,7 +138,7 @@ struct nodes_t {
 };
 
 struct rados_osds_t {
-    struct list_head rados_osds_list;
+    struct list_head rados_osds;
 };
 
 
