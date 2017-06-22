@@ -158,6 +158,11 @@ static int handle_input(int ch)
                 exit(0);
             break;
 
+        case 'n':
+            if (quit_mode)
+                quit_mode = 0;
+            return 1;
+
         case '?':
             clear();
             print_help = print_help ? 0 : 1;
