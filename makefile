@@ -1,3 +1,4 @@
+TARGET_PREFIX = /usr/local
 EXENAME = guard
 #CC = gcc
 LIBS = -lrt -lrados -lncurses
@@ -43,6 +44,10 @@ group.o: group.c
 
 element.o: element.c
 	$(CC) -c $<
+
+install:
+	mkdir -p $(TARGET_PREFIX)/bin
+	cp -f ./guard $(TARGET_PREFIX)/bin
 
 clean:
 	$(RM) guard $(objects) tags
