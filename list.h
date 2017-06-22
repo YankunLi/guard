@@ -68,8 +68,8 @@ static inline void __list_add(struct list_head * obj, struct list_head *prev,
         struct list_head *temp;          \
         while ((head)->next != (head)) { \
             temp = (head)->next;               \
-            (head)->next->next->prev = (head);  \
-            (head)->next = (head)->next->next;  \
+            temp->next->prev = (head);  \
+            (head)->next = temp->next;  \
             p = (void *) ((char *)temp - offsetoff(typeof(*(pos)), member));  \
             free(p);            \
         }                       \
