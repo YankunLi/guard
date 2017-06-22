@@ -197,7 +197,7 @@ static void put_line(const char *fmt, ...)
     }
 
     addstr(buf);
-    xfree(buf);
+    xfree(&buf);
 }
 
 #define NEXT_ROW()    \

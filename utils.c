@@ -71,8 +71,10 @@ void * xcalloc(size_t n, size_t s)
     return d;
 }
 
-void xfree(void *d)
+void xfree(void **d)
 {
-    if (d)
-        free(d);
+    if (*d)
+        free(*d);
+
+    *d = NULL;
 }
