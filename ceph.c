@@ -740,6 +740,11 @@ void close_cluster(void)
 
 }
 
+static void cmd_result_free(struct cmd_result_t *cmd_result)
+{
+    xfree(&cmd_result);
+}
+
 static void pool_free(struct rados_pool_t *p)
 {
     xfree(&p->p_name);
@@ -748,8 +753,14 @@ static void pool_free(struct rados_pool_t *p)
 
 static void __attribute__ ((destructor)) ceph_exit(void)
 {
-    struct rados_pool_t *p, *n;
+    struct rados_pool_t *p, *pn;
+    struct cmd_result_t *re, *ren;
 
-    list_for_each_entry_safe(p, n, &cluster_pool.c_pools_list, p_list)
+    guard_buf_free();
+
+    list_for_each_entry_safe(p, pn, &cluster_pool.c_pools_list, p_list)
         pool_free(p);
+
+    list_for_each_entry_safe(re, ren, &cmds_result.c_cmd_result_list, c_list)
+        cmd_result_free(re);
 }
