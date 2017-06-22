@@ -739,3 +739,17 @@ void close_cluster(void)
     //free memory
 
 }
+
+static void pool_free(struct rados_pool_t *p)
+{
+    xfree(&p->p_name);
+    xfree(&p);
+}
+
+static void __attribute__ ((destructor)) ceph_exit(void)
+{
+    struct rados_pool_t *p, *n;
+
+    list_for_each_entry_safe(p, n, &cluster_pool.c_pools_list, p_list)
+        pool_free(p);
+}
