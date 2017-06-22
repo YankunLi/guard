@@ -104,5 +104,6 @@ extern struct element *element_lookup(struct element_group *group, const char *n
 extern struct global_mon_t *get_global_mons();
 extern struct mon_t *mon_lookup(struct global_mon_t *global_mons, const char *name);
 extern void free_resource();
+extern void element_free(struct element *e);
 
 #endif

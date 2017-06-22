@@ -67,6 +67,13 @@ struct element *element_lookup(struct element_group *group, const char *name, in
     return e;
 }
 
+void element_free(struct element *e)
+{
+   // xfree(&e->e_name);
+    //xfree(&e->e_description);
+    //xfree(&e);
+}
+
 struct mon_t * mon_lookup(struct global_mon_t *global_mons, const char *name)
 {
     struct mon_t *mon_ptr;
@@ -135,17 +142,16 @@ static void __attribute__  ((constructor)) bind_global_mons()
 
 }
 
-static void __free_mons(struct global_mon_t *mons)
+static void mons_free(struct global_mon_t *mons)
 {
     struct mon_t *mon_ptr;
     list_clear(mon_ptr, &mons->g_mons, m_list);
 }
 
-
 void free_resource()
 {
     if (global_mon.g_mon_size)
-        __free_mons(&global_mon);
+        mons_free(&global_mon);
 }
 
 static void __attribute__ ((destructor)) free_mons(void)

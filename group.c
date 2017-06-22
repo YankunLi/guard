@@ -117,3 +117,42 @@ static void __attribute__ ((constructor)) group_init(void)
     group_new_hdr("ceph-pools", "Pools", "Used Size(KB)", "Objects",
             "Object Clones", "Object copies", "RD_OP", "RD_KB", "WR_OP", "WR_KB");
 }
+
+static void group_hdr_free(struct group_hdr *hdr)
+{
+    xfree(&hdr->gh_name);
+    xfree(&hdr->gh_title);
+    xfree(&hdr->gh_column[0]);
+    xfree(&hdr->gh_column[1]);
+    xfree(&hdr->gh_column[2]);
+    xfree(&hdr->gh_column[3]);
+    xfree(&hdr->gh_column[4]);
+    xfree(&hdr->gh_column[5]);
+    xfree(&hdr->gh_column[6]);
+    xfree(&hdr->gh_column[7]);
+    xfree(&hdr);
+
+}
+
+static void group_free(struct element_group *g)
+{
+    struct element *e, *n;
+
+    list_for_each_entry_safe(e, n, &g->g_elements, e_list)
+        element_free(e);
+
+    xfree(&g);
+}
+
+static void __attribute__ ((destructor)) group_exit(void)
+{
+    struct group_hdr *hdr, *hnext;
+    struct element_group *g, *gnext;
+
+    list_for_each_entry_safe(hdr, hnext, &titles_list, gh_list)
+        group_hdr_free(hdr);
+
+    list_for_each_entry_safe(g, gnext, &group_list, g_list)
+        group_free(g);
+
+}
