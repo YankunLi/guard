@@ -62,15 +62,17 @@ static inline void __list_add(struct list_head * obj, struct list_head *prev,
     obj->next = next;
 }
 
-#define list_clear(head)  \
+#define list_clear(pos, head, member)  \
     do {                  \
-        struct list_head *temp; \
-        while ((head)->prev != (head)->next) { \
-            temp = (head)->next;             \
+        void *p = NULL;   \
+        struct list_head *temp;          \
+        while ((head)->next != (head)) { \
+            temp = (head)->next;               \
             (head)->next->next->prev = (head);  \
-            (head)->next = (head)->next->next; \
-            free((void *)temp);            \
-        }                                  \
+            (head)->next = (head)->next->next;  \
+            p = (void *) ((char *)temp - offsetoff(typeof(*(pos)), member));  \
+            free(p);            \
+        }                       \
     } while (0)
 
 static inline int list_empty(struct list_head *head)

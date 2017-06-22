@@ -137,7 +137,8 @@ static void __attribute__  ((constructor)) bind_global_mons()
 
 static void __free_mons(struct global_mon_t *mons)
 {
-        list_clear(&mons->g_mons);
+    struct mon_t *mon_ptr;
+    list_clear(mon_ptr, &mons->g_mons, m_list);
 }
 
 
