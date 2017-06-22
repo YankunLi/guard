@@ -2,6 +2,7 @@
 guard is a monitoring and debugging tool to capture ceph related statistics
 and prepare them visually in a human friendly way.
 
+
 ## Requirement
 
 Prepare a Ceph cluster environment, global configuration file ceph.conf and
@@ -18,6 +19,8 @@ yum install ncurses-devel librados2-devel librados2
 make
 make install
 ```
+
+
 --------------
 ### Usage
 
