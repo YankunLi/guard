@@ -65,12 +65,12 @@ static inline void __list_add(struct list_head * obj, struct list_head *prev,
 #define list_clear(pos, head, member)  \
     do {                  \
         void *p = NULL;   \
-        struct list_head *temp;          \
+        const typeof((pos)->member) * __mptr;          \
         while ((head)->next != (head)) { \
-            temp = (head)->next;               \
-            temp->next->prev = (head);  \
-            (head)->next = temp->next;  \
-            p = (void *) ((char *)temp - offsetoff(typeof(*(pos)), member));  \
+            __mptr = (head)->next;               \
+            __mptr->next->prev = (head);  \
+            (head)->next = __mptr->next;  \
+            p = (void *) ((char *)__mptr - offsetoff(typeof(*(pos)), member));  \
             free(p);            \
         }                       \
     } while (0)
