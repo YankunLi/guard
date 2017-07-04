@@ -51,6 +51,8 @@ install:
 
 clean:
 	$(RM) guard $(objects) tags
+
+.PHONY: clean
 #guard: guard.o
 #	gcc -o guard guard.o
 #
